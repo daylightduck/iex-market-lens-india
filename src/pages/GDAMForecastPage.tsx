@@ -208,9 +208,6 @@ const GDAMForecastPage = () => {
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
                               <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
                               <div className="text-xs text-muted-foreground">
-                                Projected Price: ₹{dataPoint?.price} / kWh
-                              </div>
-                              <div className="text-xs text-muted-foreground">
                                 Confidence: {dataPoint?.confidence}%
                               </div>
                             </div>
