@@ -1,12 +1,87 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Zap, BarChart3, Clock } from "lucide-react";
+import KPIBanner from "@/components/KPIBanner";
+import DashboardFilters from "@/components/DashboardFilters";
+import TimeSeriesCharts from "@/components/TimeSeriesCharts";
+import GeographicalMap from "@/components/GeographicalMap";
+import EnergySourceBreakdown from "@/components/EnergySourceBreakdown";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-primary rounded-lg shadow-glow">
+                  <Zap className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Indian Energy Exchange (IEX)
+                  </h1>
+                  <p className="text-sm text-muted-foreground">Market Monitor Dashboard</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
+                  {new Date().toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    hour12: true,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })} IST
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2 px-3 py-2 bg-bullish/10 border border-bullish/20 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-bullish" />
+                <span className="text-sm font-medium text-bullish">Market Open</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-8">
+        {/* Global Controls & Filters */}
+        <DashboardFilters />
+        
+        {/* KPI Banner */}
+        <KPIBanner />
+        
+        {/* Time Series Charts */}
+        <TimeSeriesCharts />
+        
+        {/* Geographical Map */}
+        <GeographicalMap />
+        
+        {/* Energy Source Breakdown */}
+        <EnergySourceBreakdown />
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-card/30 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+            <div className="text-sm text-muted-foreground">
+              © 2024 Indian Energy Exchange Market Monitor. Real-time energy trading data.
+            </div>
+            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+              <span>Last Updated: {new Date().toLocaleTimeString('en-IN')}</span>
+              <span>•</span>
+              <span className="text-bullish">Live Data</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
