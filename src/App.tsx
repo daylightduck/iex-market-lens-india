@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import EnergySourcesPage from "./pages/EnergySourcesPage";
 import RegionalMarketPage from "./pages/RegionalMarketPage";
 import DAMForecastPage from "./pages/DAMForecastPage";
+import GDAMForecastPage from "./pages/GDAMForecastPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +24,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/energy-sources" element={<EnergySourcesPage />} />
             <Route path="/regional-market" element={<RegionalMarketPage />} />
-            <Route path="/dam-forecast" element={<DAMForecastPage />} />
+        <Route path="/dam-forecast" element={<DAMForecastPage />} />
+        <Route path="/gdam-forecast" element={<GDAMForecastPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -16,17 +16,17 @@ const generateForecastData = (date: Date) => {
     for (let quarter = 0; quarter < 4; quarter++) {
       const timeSlot = hour * 4 + quarter;
       // Generate realistic price patterns (higher during peak hours)
-      let basePrice = 3.5;
-      if (hour >= 6 && hour <= 10) basePrice = 5.2; // Morning peak
-      if (hour >= 18 && hour <= 22) basePrice = 6.8; // Evening peak
-      if (hour >= 23 || hour <= 5) basePrice = 2.1; // Night low
+      let basePrice = 3.8; // Slightly higher base for GDAM
+      if (hour >= 6 && hour <= 10) basePrice = 5.5; // Morning peak
+      if (hour >= 18 && hour <= 22) basePrice = 7.2; // Evening peak
+      if (hour >= 23 || hour <= 5) basePrice = 2.3; // Night low
       
-      const variation = (Math.random() - 0.5) * 2;
-      const price = Math.max(1.5, basePrice + variation);
+      const variation = (Math.random() - 0.5) * 2.2;
+      const price = Math.max(1.7, basePrice + variation);
       
       // Generate confidence score (70-95%)
-      const baseConfidence = 85;
-      const confidenceVariation = (Math.random() - 0.5) * 20;
+      const baseConfidence = 82; // Slightly lower for GDAM
+      const confidenceVariation = (Math.random() - 0.5) * 22;
       const confidence = Math.max(70, Math.min(95, baseConfidence + confidenceVariation));
       
       data.push({
@@ -42,7 +42,7 @@ const generateForecastData = (date: Date) => {
   return data;
 };
 
-const DAMForecastPage = () => {
+const GDAMForecastPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 6, 17)); // July 17, 2025
   const forecastData = generateForecastData(selectedDate);
   
@@ -82,15 +82,15 @@ const DAMForecastPage = () => {
                 <h1 className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                   IEX Market Monitor
                 </h1>
-                <p className="text-xs text-muted-foreground">DAM Forecast</p>
+                <p className="text-xs text-muted-foreground">GDAM Forecast</p>
               </div>
             </Link>
           </div>
           
           <div className="flex items-center gap-4">
-            <Link to="/gdam-forecast">
-              <Button variant="outline" className="bg-accent/10 border-accent/20 hover:bg-accent/20">
-                GDAM Dashboard
+            <Link to="/dam-forecast">
+              <Button variant="outline" className="bg-primary/10 border-primary/20 hover:bg-primary/20">
+                DAM Dashboard
               </Button>
             </Link>
             <ThemeToggle />
@@ -103,7 +103,7 @@ const DAMForecastPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Day-Ahead Market (DAM) Forecast
+              Green Day-Ahead Market (GDAM) Forecast
             </h1>
             <p className="text-muted-foreground mt-1">
               96 time-slot price predictions for the selected day
@@ -301,4 +301,4 @@ const DAMForecastPage = () => {
   );
 };
 
-export default DAMForecastPage;
+export default GDAMForecastPage;
