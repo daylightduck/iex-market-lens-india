@@ -1,11 +1,9 @@
-import { Zap, BarChart3, Clock, ExternalLink } from "lucide-react";
+import { Zap, BarChart3, Clock, Map, Battery } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import KPIBanner from "@/components/KPIBanner";
 import DashboardFilters from "@/components/DashboardFilters";
 import TimeSeriesCharts from "@/components/TimeSeriesCharts";
-import GeographicalMap from "@/components/GeographicalMap";
-import EnergySourceBreakdown from "@/components/EnergySourceBreakdown";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const Index = () => {
@@ -30,6 +28,20 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link to="/regional-market">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Map className="h-4 w-4" />
+                  Regional Market
+                </Button>
+              </Link>
+              
+              <Link to="/energy-sources">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Battery className="h-4 w-4" />
+                  Energy Sources
+                </Button>
+              </Link>
+
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
@@ -64,32 +76,6 @@ const Index = () => {
         
         {/* Time Series Charts */}
         <TimeSeriesCharts />
-        
-        {/* Geographical Map */}
-        <div className="relative">
-          <GeographicalMap />
-          <div className="absolute top-6 right-6">
-            <Link to="/regional-market">
-              <Button size="sm" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                View Details
-              </Button>
-            </Link>
-          </div>
-        </div>
-        
-        {/* Energy Source Breakdown */}
-        <div className="relative">
-          <EnergySourceBreakdown />
-          <div className="absolute top-6 right-6">
-            <Link to="/energy-sources">
-              <Button size="sm" className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                View Details
-              </Button>
-            </Link>
-          </div>
-        </div>
       </main>
 
       {/* Footer */}
