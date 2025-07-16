@@ -1,4 +1,4 @@
-import { Zap, BarChart3, Clock, Map, Battery } from "lucide-react";
+import { Zap, BarChart3, Clock, Map, Battery, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import KPIBanner from "@/components/KPIBanner";
@@ -28,6 +28,13 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link to="/dam-forecast">
+                <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                  <TrendingUp className="h-4 w-4" />
+                  DAM Forecast
+                </Button>
+              </Link>
+              
               <Link to="/regional-market">
                 <Button variant="outline" size="sm" className="gap-2">
                   <Map className="h-4 w-4" />
