@@ -151,58 +151,74 @@ const DAMForecastPage = () => {
                 </CardTitle>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-green-500"></div>
-                    <span>High Confidence (70-100%)</span>
+                    <div className="w-3 h-3 rounded bg-success/40"></div>
+                    <span>Low Price</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-yellow-500"></div>
-                    <span>Medium Confidence (40-70%)</span>
+                    <div className="w-3 h-3 rounded bg-warning/40"></div>
+                    <span>Medium Price</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-red-500"></div>
-                    <span>Low Confidence (0-40%)</span>
+                    <div className="w-3 h-3 rounded bg-destructive/40"></div>
+                    <span>High Price</span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Grid Heatmap */}
-                <div className="grid grid-cols-24 gap-1 p-4">
-                  {forecastData.map((dataPoint, index) => {
-                    const confidence = dataPoint?.confidence || 0;
-                    let bgColor = 'bg-red-400'; // Low confidence
-                    
-                    if (confidence >= 70) {
-                      bgColor = 'bg-green-400'; // High confidence
-                    } else if (confidence >= 40) {
-                      bgColor = 'bg-yellow-400'; // Medium confidence
-                    }
-                    
-                    return (
-                      <div
-                        key={index}
-                        className={`relative group w-full aspect-square ${bgColor} rounded cursor-pointer transition-all hover:scale-110 hover:z-10 flex items-center justify-center`}
-                      >
-                        <span className="text-xs font-medium text-white drop-shadow-sm">{confidence}%</span>
-                        
-                        {/* Tooltip */}
-                        {dataPoint && (
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 whitespace-nowrap">
-                            <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Confidence: {dataPoint?.confidence}%
-                            </div>
-                          </div>
-                        )}
+                {/* Matrix Heatmap */}
+                <div className="border rounded-lg overflow-hidden">
+                  {/* Column Headers (Hours) */}
+                  <div className="grid grid-cols-25 bg-muted">
+                    <div className="p-2 text-xs font-medium text-center border-r">Time</div>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <div key={i} className="p-2 text-xs font-medium text-center border-r last:border-r-0">
+                        {i.toString().padStart(2, '0')}:00
                       </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Time Labels */}
-                <div className="grid grid-cols-24 gap-1 px-4 text-xs text-center text-muted-foreground">
-                  {Array.from({ length: 24 }, (_, i) => (
-                    <div key={i} className="text-center">
-                      {i.toString().padStart(2, '0')}
+                    ))}
+                  </div>
+                  
+                  {/* Matrix Rows */}
+                  {Array.from({ length: 4 }, (_, rowIndex) => (
+                    <div key={rowIndex} className="grid grid-cols-25 border-t">
+                      {/* Row Header (15-min intervals) */}
+                      <div className="p-2 text-xs font-medium text-center bg-muted border-r flex items-center justify-center">
+                        :{(rowIndex * 15).toString().padStart(2, '0')}
+                      </div>
+                      
+                      {/* Matrix Cells */}
+                      {Array.from({ length: 24 }, (_, colIndex) => {
+                        const dataPoint = forecastData.find(
+                          d => d.hour === colIndex && d.quarter === rowIndex
+                        );
+                        const confidence = dataPoint?.confidence || 0;
+                        
+                        let bgColor = 'bg-red-100 hover:bg-red-200 border-red-200'; // Low confidence
+                        
+                        if (confidence >= 70) {
+                          bgColor = 'bg-green-100 hover:bg-green-200 border-green-200'; // High confidence
+                        } else if (confidence >= 40) {
+                          bgColor = 'bg-yellow-100 hover:bg-yellow-200 border-yellow-200'; // Medium confidence
+                        }
+                        
+                        return (
+                          <div
+                            key={colIndex}
+                            className={`relative group h-12 ${bgColor} border-r border-b last:border-r-0 cursor-pointer transition-all hover:scale-105 hover:z-10 flex items-center justify-center`}
+                          >
+                            <span className="text-xs font-medium">{confidence}%</span>
+                            
+                            {/* Tooltip */}
+                            {dataPoint && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 whitespace-nowrap">
+                                <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Confidence: {dataPoint?.confidence}%
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
