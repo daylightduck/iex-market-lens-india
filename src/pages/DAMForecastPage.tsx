@@ -165,57 +165,52 @@ const DAMForecastPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Matrix Heatmap */}
-                <div className="border rounded-lg overflow-hidden">
-                  {/* Column Headers (Hours) */}
-                  <div className="grid grid-cols-25 bg-muted">
-                    <div className="p-2 text-xs font-medium text-center border-r">Time</div>
+                <div className="space-y-4">
+                  {/* Hour labels */}
+                  <div className="grid grid-cols-25 gap-1 text-xs text-muted-foreground">
+                    <div></div> {/* Empty corner */}
                     {Array.from({ length: 24 }, (_, i) => (
-                      <div key={i} className="p-2 text-xs font-medium text-center border-r last:border-r-0">
-                        {i.toString().padStart(2, '0')}:00
+                      <div key={i} className="text-center font-medium">
+                        {i.toString().padStart(2, '0')}
                       </div>
                     ))}
                   </div>
                   
-                  {/* Matrix Rows */}
-                  {Array.from({ length: 4 }, (_, rowIndex) => (
-                    <div key={rowIndex} className="grid grid-cols-25 border-t">
-                      {/* Row Header (15-min intervals) */}
-                      <div className="p-2 text-xs font-medium text-center bg-muted border-r flex items-center justify-center">
-                        :{(rowIndex * 15).toString().padStart(2, '0')}
+                  {/* Heatmap grid */}
+                  {Array.from({ length: 4 }, (_, quarterIndex) => (
+                    <div key={quarterIndex} className="grid grid-cols-25 gap-1">
+                      {/* Quarter label */}
+                      <div className="text-xs text-muted-foreground font-medium flex items-center">
+                        :{(quarterIndex * 15).toString().padStart(2, '0')}
                       </div>
                       
-                      {/* Matrix Cells */}
-                      {Array.from({ length: 24 }, (_, colIndex) => {
+                      {/* Hour cells */}
+                      {Array.from({ length: 24 }, (_, hourIndex) => {
                         const dataPoint = forecastData.find(
-                          d => d.hour === colIndex && d.quarter === rowIndex
+                          d => d.hour === hourIndex && d.quarter === quarterIndex
                         );
-                        const confidence = dataPoint?.confidence || 0;
-                        
-                        let bgColor = 'bg-red-100 hover:bg-red-200 border-red-200'; // Low confidence
-                        
-                        if (confidence >= 70) {
-                          bgColor = 'bg-green-100 hover:bg-green-200 border-green-200'; // High confidence
-                        } else if (confidence >= 40) {
-                          bgColor = 'bg-yellow-100 hover:bg-yellow-200 border-yellow-200'; // Medium confidence
-                        }
-                        
                         return (
                           <div
-                            key={colIndex}
-                            className={`relative group h-12 ${bgColor} border-r border-b last:border-r-0 cursor-pointer transition-all hover:scale-105 hover:z-10 flex items-center justify-center`}
+                            key={`${hourIndex}-${quarterIndex}`}
+                            className={cn(
+                              "relative h-12 rounded border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg group",
+                              getPriceColorClass(dataPoint?.price || 0)
+                            )}
+                            title={`${dataPoint?.timeRange} - ₹${dataPoint?.price}/kWh`}
                           >
-                            <span className="text-xs font-medium">{confidence}%</span>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-foreground">
+                                ₹{dataPoint?.price}
+                              </span>
+                            </div>
                             
                             {/* Tooltip */}
-                            {dataPoint && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 whitespace-nowrap">
-                                <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  Confidence: {dataPoint?.confidence}%
-                                </div>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
+                              <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
+                              <div className="text-xs text-muted-foreground">
+                                Confidence: {dataPoint?.confidence}%
                               </div>
-                            )}
+                            </div>
                           </div>
                         );
                       })}
