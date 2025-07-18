@@ -41,7 +41,9 @@ export const useMCPData = (
         .order('Date', { ascending: true })
         .order('Hour', { ascending: true })
         .order('Time Block', { ascending: true });
- console.log('Raw data from Supabase:', damData);
+      
+      console.log("---")
+      console.log('Raw data from Supabase:', damData);
       if (fetchError) {
         throw fetchError;
       }
