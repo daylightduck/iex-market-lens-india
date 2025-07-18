@@ -72,12 +72,10 @@ export const useMCPData = (
     try {
       const { from, to } = getDateFilter();
 
-      // Query supabase with date range filter
+      // Query supabase - let's get all data first to debug
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
         .select('*')
-        .gte('Date', from)
-        .lte('Date', to)
         .order('Date', { ascending: true })
         .order('Hour', { ascending: true })
         .order('Time Block', { ascending: true });
@@ -100,13 +98,13 @@ export const useMCPData = (
 
       const points: MCPDataPoint[] = rows.map((row) => {
         // extract start time from "HH:MM - HH:MM"
-        const match = row['Time Block'].match(/^(\d{1,2}):(\d{2})/);
+        const match = row['Time Block']?.match(/^(\d{1,2}):(\d{2})/);
         const time = match
           ? `${match[1].padStart(2, '0')}:${match[2]}`
-          : `${String(row.Hour - 1).padStart(2, '0')}:00`;
+          : `${String(Number(row.Hour) - 1).padStart(2, '0')}:00`;
         return {
           time,
-          price: parseFloat(row['MCP (Rs/MWh)'].toFixed(2)),
+          price: parseFloat(String(row['MCP (Rs/MWh)']).replace(/[^\d.-]/g, '') || '0'),
         };
       });
 
