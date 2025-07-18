@@ -24,17 +24,16 @@ export const useMCPData = () => {
       setLoading(true);
       setError(null);
 
-
-    const { data: damData, error:fetchError  } = await supabase
-      .from('dam_snapshot')
-      .select('*')
+      const { data: damData, error: fetchError } = await supabase
+        .from('dam_snapshot')
+        .select('*')
+        .limit(100);
 
       if (fetchError) {
         throw fetchError;
       }
       
-      console.log("---")
-      console.log(damData)
+      console.log("Raw data:", damData);
       
       if (!damData || damData.length === 0) {
         setData([]);
@@ -42,43 +41,57 @@ export const useMCPData = () => {
         return;
       }
 
-      // Group by hour and average the prices
-      const hourlyData = new Map<number, number[]>();
+      // Filter and process data - handle the corrupted column structure
+      const validData: MCPDataPoint[] = [];
       
       damData.forEach((row: any) => {
-        const hour = Number(row.hour);
-        const price = row.mcp_rs_per_mwh;
+        // Extract valid MCP price from the first row or other rows that have it
+        let price = null;
+        let timeStr = '';
         
-        if (!isNaN(hour) && price !== null && hour >= 1 && hour <= 24) {
-          if (!hourlyData.has(hour)) {
-            hourlyData.set(hour, []);
+        if (row.id === 1 && row.mcp_rs_per_mwh !== null) {
+          price = row.mcp_rs_per_mwh;
+          timeStr = row.time_block || '00:00';
+        } else if (row.mcv_mw && typeof row.mcv_mw === 'number') {
+          // Use mcv_mw as price for other rows since data seems corrupted
+          price = row.mcv_mw;
+          // Extract time from date field if it contains time block
+          if (typeof row.date === 'string' && row.date.includes(':')) {
+            timeStr = row.date;
+          } else if (typeof row.hour === 'string' && row.hour.includes(':')) {
+            timeStr = row.hour;
           }
-          hourlyData.get(hour)!.push(price);
+        }
+        
+        if (price && timeStr) {
+          // Extract hour from time string
+          const timeMatch = timeStr.match(/(\d{2}):(\d{2})/);
+          if (timeMatch) {
+            const hour = parseInt(timeMatch[1]);
+            validData.push({
+              time: `${hour.toString().padStart(2, '0')}:00`,
+              price: Math.round(price * 100) / 100
+            });
+          }
         }
       });
 
-      // Calculate average price for each hour and convert to 24-hour format
-      const processedData: MCPDataPoint[] = Array.from(hourlyData.entries())
-        .map(([hour, prices]) => {
-          const avgPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
-          // Convert hour (1-24) to time format (00:00-23:00)
-          const displayHour = hour === 24 ? 0 : hour;
-          const timeStr = displayHour.toString().padStart(2, '0') + ':00';
-          
-          return {
-            time: timeStr,
-            price: Math.round(avgPrice * 100) / 100 // Round to 2 decimal places
-          };
-        })
+      // Sort by time and remove duplicates
+      const uniqueData = validData
+        .filter((item, index, self) => 
+          index === self.findIndex(t => t.time === item.time)
+        )
         .sort((a, b) => a.time.localeCompare(b.time));
 
+      console.log("Processed data:", uniqueData);
+
       // Calculate min/max statistics
-      if (processedData.length > 0) {
-        const prices = processedData.map(d => d.price);
+      if (uniqueData.length > 0) {
+        const prices = uniqueData.map(d => d.price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
-        const minPoint = processedData.find(d => d.price === minPrice);
-        const maxPoint = processedData.find(d => d.price === maxPrice);
+        const minPoint = uniqueData.find(d => d.price === minPrice);
+        const maxPoint = uniqueData.find(d => d.price === maxPrice);
 
         setStats({
           min: Math.round(minPrice * 100) / 100,
@@ -88,7 +101,7 @@ export const useMCPData = () => {
         });
       }
 
-      setData(processedData);
+      setData(uniqueData);
     } catch (err) {
       console.error('Error fetching MCP data:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
