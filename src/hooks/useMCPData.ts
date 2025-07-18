@@ -24,17 +24,17 @@ export const useMCPData = () => {
       setLoading(true);
       setError(null);
 
-      const { data: damData, error: fetchError } = await supabase
-        .from('dam_snapshot')
-        .select('*')
-        // .not('hour', 'is', null)
-        // .not('mcp_rs_per_mwh', 'is', null)
-        // .order('hour');
+
+    const { data: damData, error:fetchError  } = await supabase
+      .from('dam_snapshot')
+      .select('*')
 
       if (fetchError) {
         throw fetchError;
       }
+      console.log("---")
       console.log(damData)
+      
       if (!damData || damData.length === 0) {
         setData([]);
         setStats(null);
