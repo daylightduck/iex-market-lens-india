@@ -41,7 +41,7 @@ export const useMCPData = (
     setError(null);
 
     try {
-      // Get all data from Supabase first
+      // Get all data from Supabase
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
         .select('*')
@@ -54,41 +54,29 @@ export const useMCPData = (
       }
 
       if (!damData || damData.length === 0) {
-        console.log('No data found in database');
         setData([]);
         setStats(null);
         return;
       }
 
-      console.log('Total rows fetched:', damData.length);
-
-      // Get all unique dates in the dataset
+      // Get all unique dates
       const availableDates = Array.from(
         new Set(damData.map((row) => row.Date).filter(Boolean))
       );
 
-      console.log('Available dates:', availableDates);
+      // Use the most recent date for 1D view
+      const sortedDates = availableDates.sort((a, b) => {
+        return parseDate(b).getTime() - parseDate(a).getTime();
+      });
 
-      // For development/testing: Use available data instead of strict date filtering
-      // This ensures we always show data if it exists
       let filteredDates: string[] = [];
-
+      
       if (timeRange === 'custom' && dateRange?.from && dateRange?.to) {
-        // Only filter for custom ranges
         filteredDates = availableDates.filter(dateStr => {
           const date = parseDate(dateStr);
           return date >= dateRange.from! && date <= dateRange.to!;
         });
       } else {
-        // For preset ranges, use all available data (for development)
-        // In production, you'd want to implement proper date filtering
-        filteredDates = availableDates;
-        
-        // Alternative: Use the most recent N dates based on timeRange
-        const sortedDates = availableDates.sort((a, b) => {
-          return parseDate(b).getTime() - parseDate(a).getTime();
-        });
-        
         switch (timeRange) {
           case '1D':
             filteredDates = sortedDates.slice(0, 1);
@@ -107,10 +95,7 @@ export const useMCPData = (
         }
       }
 
-      console.log('Filtered dates:', filteredDates);
-
       if (filteredDates.length === 0) {
-        console.log('No dates match the filter criteria');
         setData([]);
         setStats(null);
         return;
@@ -122,16 +107,16 @@ export const useMCPData = (
       
       filteredDates.forEach(targetDate => {
         const dayData = damData.filter((row) => row.Date === targetDate);
-        console.log(`Processing ${targetDate}: ${dayData.length} rows`);
         
         // Group by hour for this date
         const hourlyData = new Map<number, number[]>();
         
         dayData.forEach((row) => {
           const hour = Number(row.Hour);
-          const mcpValue = Number(row['MCP (Rs/MWh)']);
+          const mcpValue = parseFloat(row['MCP (Rs/MWh)']);
           
-          if (hour && mcpValue && hour >= 1 && hour <= 24) {
+          // More lenient validation - accept any positive number
+          if (hour >= 1 && hour <= 24 && mcpValue > 0 && !isNaN(mcpValue)) {
             if (!hourlyData.has(hour)) {
               hourlyData.set(hour, []);
             }
@@ -140,11 +125,12 @@ export const useMCPData = (
           }
         });
 
-        // Calculate hourly averages for this date
+        // Calculate hourly averages for ALL 24 hours
         for (let hour = 1; hour <= 24; hour++) {
           const hourPrices = hourlyData.get(hour);
           if (hourPrices && hourPrices.length > 0) {
             const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
+            // Convert hour to display format (1-24 becomes 01:00-24:00, but 24 becomes 00:00)
             const displayHour = hour === 24 ? 0 : hour;
             const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
             
@@ -156,12 +142,12 @@ export const useMCPData = (
         }
       });
 
-      // Calculate overall hourly averages across all dates
+      // Create hourly points ensuring all 24 hours are included
       const hourlyPoints: MCPDataPoint[] = [];
       
-      for (let hour = 1; hour <= 24; hour++) {
-        const displayHour = hour === 24 ? 0 : hour;
-        const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+      // Process hours 1-23 first (01:00 to 23:00)
+      for (let hour = 1; hour <= 23; hour++) {
+        const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
         const hourPrices = allHourlyData.get(timeLabel);
         
         if (hourPrices && hourPrices.length > 0) {
@@ -172,15 +158,27 @@ export const useMCPData = (
           });
         }
       }
+      
+      // Handle hour 24 (which displays as 00:00)
+      const midnightPrices = allHourlyData.get('00:00');
+      if (midnightPrices && midnightPrices.length > 0) {
+        const avgPrice = midnightPrices.reduce((sum, price) => sum + price, 0) / midnightPrices.length;
+        hourlyPoints.push({
+          time: '00:00',
+          price: Math.round(avgPrice * 100) / 100
+        });
+      }
 
-      // Sort by time
+      // Sort by time (00:00 should come first)
       hourlyPoints.sort((a, b) => {
-        const timeA = a.time === '00:00' ? '24:00' : a.time;
-        const timeB = b.time === '00:00' ? '24:00' : b.time;
-        return timeA.localeCompare(timeB);
+        // Convert time to minutes for proper sorting
+        const timeToMinutes = (time: string) => {
+          const [hours, minutes] = time.split(':').map(Number);
+          return hours * 60 + minutes;
+        };
+        
+        return timeToMinutes(a.time) - timeToMinutes(b.time);
       });
-
-      console.log('Processed hourly points:', hourlyPoints.length);
 
       // Calculate comprehensive statistics
       if (hourlyPoints.length > 0 && allPrices.length > 0) {
@@ -203,6 +201,7 @@ export const useMCPData = (
         setStats(null);
       }
 
+      console.log('Final hourly points:', hourlyPoints.length, hourlyPoints);
       setData(hourlyPoints);
     } catch (err) {
       console.error('Error fetching MCP data:', err);
