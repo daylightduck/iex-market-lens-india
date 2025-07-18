@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { useMCPData } from "@/hooks/useMCPData";
+import { Loader2 } from "lucide-react";
 
 // Sample data for demonstration
 const demandSupplyData = [
@@ -12,16 +14,6 @@ const demandSupplyData = [
   { time: "24:00", demand: 3.6, supply: 12.9 },
 ];
 
-const priceData = [
-  { time: "00:00", price: 4.2 },
-  { time: "04:00", price: 3.8 },
-  { time: "08:00", price: 6.1 },
-  { time: "12:00", price: 8.2 },
-  { time: "16:00", price: 9.7 },
-  { time: "20:00", price: 7.8 },
-  { time: "24:00", price: 5.4 },
-];
-
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -29,7 +21,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-sm font-medium text-foreground">{`Time: ${label}`}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {`${entry.dataKey}: ${entry.value}${entry.dataKey === 'price' ? ' ₹' : ' GW'}`}
+            {entry.dataKey === 'price' 
+              ? `${entry.name}: ₹${entry.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+              : `${entry.name}: ${entry.value} GW`
+            }
           </p>
         ))}
       </div>
@@ -39,6 +34,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export const TimeSeriesCharts = () => {
+  const { data: mcpData, stats, loading, error } = useMCPData();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* Demand vs Supply Chart */}
@@ -97,48 +94,73 @@ export const TimeSeriesCharts = () => {
       <Card className="p-6 bg-card border-border hover:shadow-trading transition-all duration-300">
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-foreground mb-2">Market Clearing Price (MCP)</h3>
-          <p className="text-sm text-muted-foreground">Historical price trends with min/max indicators</p>
+          <p className="text-sm text-muted-foreground">
+            {loading ? 'Loading...' : 'Historical price trends with min/max indicators'}
+          </p>
         </div>
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={priceData}>
-              <defs>
-                <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="time" 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                label={{ value: 'Price (₹)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="price"
-                stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                fill="url(#priceGradient)"
-                dot={{ fill: "hsl(var(--primary))", r: 4 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-sm text-bearish">Error loading data</p>
+                <p className="text-xs text-muted-foreground mt-1">{error}</p>
+              </div>
+            </div>
+          ) : mcpData.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-sm text-muted-foreground">No MCP data available</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={mcpData}>
+                <defs>
+                  <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  label={{ value: 'Price (₹)', angle: -90, position: 'insideLeft' }}
+                  tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="price"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  fill="url(#priceGradient)"
+                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                  name="MCP"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
         <div className="flex justify-between mt-4 text-sm">
           <div className="flex items-center space-x-2 text-bullish">
             <span className="font-medium">Min:</span>
-            <span>₹2.30</span>
+            <span>
+              {stats ? `₹${stats.min.toLocaleString('en-IN')} @ ${stats.minTime}` : '--'}
+            </span>
           </div>
           <div className="flex items-center space-x-2 text-bearish">
             <span className="font-medium">Max:</span>
-            <span>₹9.70</span>
+            <span>
+              {stats ? `₹${stats.max.toLocaleString('en-IN')} @ ${stats.maxTime}` : '--'}
+            </span>
           </div>
         </div>
       </Card>
