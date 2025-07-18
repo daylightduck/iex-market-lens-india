@@ -1,7 +1,20 @@
+
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useMCPData } from "@/hooks/useMCPData";
 import { Loader2 } from "lucide-react";
+
+type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
+
+interface TimeSeriesChartsProps {
+  filters?: {
+    timeRange: TimeRange;
+    dateRange: { from?: Date; to?: Date };
+    region: string;
+    state: string;
+  };
+}
 
 // Sample data for demonstration
 const demandSupplyData = [
@@ -33,8 +46,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const TimeSeriesCharts = () => {
-  const { data: mcpData, stats, loading, error } = useMCPData();
+export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
+  const { data: mcpData, stats, loading, error } = useMCPData(
+    filters?.timeRange || "1D",
+    filters?.dateRange
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -95,7 +111,7 @@ export const TimeSeriesCharts = () => {
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-foreground mb-2">Market Clearing Price (MCP)</h3>
           <p className="text-sm text-muted-foreground">
-            {loading ? 'Loading...' : 'Historical price trends with min/max indicators'}
+            {loading ? 'Loading...' : `Historical price trends (${filters?.timeRange || '24 Hours'})`}
           </p>
         </div>
         <div className="h-80">
@@ -112,7 +128,7 @@ export const TimeSeriesCharts = () => {
             </div>
           ) : mcpData.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-muted-foreground">No MCP data available</p>
+              <p className="text-sm text-muted-foreground">No MCP data available for selected period</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -128,6 +144,9 @@ export const TimeSeriesCharts = () => {
                   dataKey="time" 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  angle={filters?.timeRange !== "1D" ? -45 : 0}
+                  textAnchor={filters?.timeRange !== "1D" ? "end" : "middle"}
+                  height={filters?.timeRange !== "1D" ? 80 : 30}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"

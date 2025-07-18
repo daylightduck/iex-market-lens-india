@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,11 +14,41 @@ interface MCPStats {
   maxTime: string;
 }
 
-export const useMCPData = () => {
+type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+export const useMCPData = (timeRange: TimeRange = "1D", dateRange?: DateRange) => {
   const [data, setData] = useState<MCPDataPoint[]>([]);
   const [stats, setStats] = useState<MCPStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const getDateFilter = () => {
+    const now = new Date();
+    
+    switch (timeRange) {
+      case "1D":
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        return { from: oneDayAgo, to: now };
+      case "1W":
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return { from: oneWeekAgo, to: now };
+      case "1M":
+        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return { from: oneMonthAgo, to: now };
+      case "1Y":
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        return { from: oneYearAgo, to: now };
+      case "custom":
+        return dateRange || { from: new Date(), to: new Date() };
+      default:
+        return { from: new Date(), to: new Date() };
+    }
+  };
 
   const fetchMCPData = async () => {
     try {
@@ -27,7 +58,8 @@ export const useMCPData = () => {
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
         .select('*')
-        .limit(100);
+        .order('date', { ascending: true })
+        .limit(1000);
 
       if (fetchError) {
         throw fetchError;
@@ -41,35 +73,79 @@ export const useMCPData = () => {
         return;
       }
 
-      // Filter and process data - handle the corrupted column structure
+      const { from, to } = getDateFilter();
+      console.log("Date filter:", { from, to, timeRange });
+
+      // Filter and process data based on date range
       const validData: MCPDataPoint[] = [];
       
       damData.forEach((row: any) => {
-        // Extract valid MCP price from the first row or other rows that have it
+        // Extract valid MCP price and date
         let price = null;
+        let dateStr = '';
         let timeStr = '';
         
+        // Handle the data structure
         if (row.id === 1 && row.mcp_rs_per_mwh !== null) {
           price = row.mcp_rs_per_mwh;
+          dateStr = row.date || '';
           timeStr = row.time_block || '00:00';
         } else if (row.mcv_mw && typeof row.mcv_mw === 'number') {
-          // Use mcv_mw as price for other rows since data seems corrupted
           price = row.mcv_mw;
-          // Extract time from date field if it contains time block
-          if (typeof row.date === 'string' && row.date.includes(':')) {
-            timeStr = row.date;
-          } else if (typeof row.hour === 'string' && row.hour.includes(':')) {
+          dateStr = row.date || '';
+          if (typeof row.hour === 'string' && row.hour.includes(':')) {
             timeStr = row.hour;
+          } else if (typeof row.time_block === 'string') {
+            timeStr = row.time_block;
           }
         }
-        
-        if (price && timeStr) {
-          // Extract hour from time string
-          const timeMatch = timeStr.match(/(\d{2}):(\d{2})/);
-          if (timeMatch) {
-            const hour = parseInt(timeMatch[1]);
+
+        if (price && dateStr) {
+          // Parse date - handle different date formats
+          let rowDate: Date | null = null;
+          
+          // Try different date parsing approaches
+          if (dateStr.includes('/')) {
+            // Format: DD/MM/YYYY or MM/DD/YYYY
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              // Assume DD/MM/YYYY format for Indian data
+              rowDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            }
+          } else if (dateStr.includes('-')) {
+            // Format: YYYY-MM-DD
+            rowDate = new Date(dateStr);
+          } else {
+            // Try direct parsing
+            rowDate = new Date(dateStr);
+          }
+
+          // Check if date is within range
+          if (rowDate && !isNaN(rowDate.getTime())) {
+            if (timeRange === "custom" && dateRange) {
+              if (dateRange.from && rowDate < dateRange.from) return;
+              if (dateRange.to && rowDate > dateRange.to) return;
+            } else {
+              if (rowDate < from || rowDate > to) return;
+            }
+
+            // Extract time for display
+            let displayTime = '';
+            if (timeStr) {
+              const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})/);
+              if (timeMatch) {
+                const hour = parseInt(timeMatch[1]);
+                displayTime = `${hour.toString().padStart(2, '0')}:00`;
+              }
+            }
+
+            // For longer periods, show date + time, for 1D show only time
+            const label = timeRange === "1D" 
+              ? displayTime || `${validData.length}:00`
+              : `${rowDate.toLocaleDateString('en-GB')} ${displayTime}`;
+
             validData.push({
-              time: `${hour.toString().padStart(2, '0')}:00`,
+              time: label,
               price: Math.round(price * 100) / 100
             });
           }
@@ -112,7 +188,7 @@ export const useMCPData = () => {
 
   useEffect(() => {
     fetchMCPData();
-  }, []);
+  }, [timeRange, dateRange?.from, dateRange?.to]);
 
   return { data, stats, loading, error, refetch: fetchMCPData };
 };

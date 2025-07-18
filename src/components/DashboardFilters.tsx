@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +11,16 @@ import { cn } from "@/lib/utils";
 
 type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
 
-export const DashboardFilters = () => {
+interface DashboardFiltersProps {
+  onFiltersChange?: (filters: {
+    timeRange: TimeRange;
+    dateRange: { from?: Date; to?: Date };
+    region: string;
+    state: string;
+  }) => void;
+}
+
+export const DashboardFilters = ({ onFiltersChange }: DashboardFiltersProps) => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>("1D");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -41,6 +51,31 @@ export const DashboardFilters = () => {
     { value: "karnataka", label: "Karnataka" },
   ];
 
+  const handleTimeRangeChange = (timeRange: TimeRange) => {
+    setSelectedTimeRange(timeRange);
+    notifyFiltersChange(timeRange, dateRange, selectedRegion, selectedState);
+  };
+
+  const handleDateRangeChange = (newDateRange: { from?: Date; to?: Date }) => {
+    setDateRange(newDateRange);
+    notifyFiltersChange(selectedTimeRange, newDateRange, selectedRegion, selectedState);
+  };
+
+  const handleApplyFilters = () => {
+    notifyFiltersChange(selectedTimeRange, dateRange, selectedRegion, selectedState);
+  };
+
+  const notifyFiltersChange = (timeRange: TimeRange, dateRange: { from?: Date; to?: Date }, region: string, state: string) => {
+    if (onFiltersChange) {
+      onFiltersChange({
+        timeRange,
+        dateRange,
+        region,
+        state
+      });
+    }
+  };
+
   return (
     <Card className="p-6 mb-6 bg-card border-border">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
@@ -57,7 +92,7 @@ export const DashboardFilters = () => {
                 key={range.value}
                 variant={selectedTimeRange === range.value ? "trading" : "filter"}
                 size="sm"
-                onClick={() => setSelectedTimeRange(range.value)}
+                onClick={() => handleTimeRangeChange(range.value)}
                 className="min-w-fit"
               >
                 {range.label}
@@ -88,7 +123,10 @@ export const DashboardFilters = () => {
                   <Calendar
                     mode="single"
                     selected={dateRange.from}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                    onSelect={(date) => {
+                      const newRange = { ...dateRange, from: date };
+                      handleDateRangeChange(newRange);
+                    }}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
@@ -112,7 +150,10 @@ export const DashboardFilters = () => {
                   <Calendar
                     mode="single"
                     selected={dateRange.to}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                    onSelect={(date) => {
+                      const newRange = { ...dateRange, to: date };
+                      handleDateRangeChange(newRange);
+                    }}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
@@ -159,7 +200,7 @@ export const DashboardFilters = () => {
 
         {/* Filter Actions */}
         <div className="flex items-end">
-          <Button variant="success" className="min-w-fit">
+          <Button variant="success" className="min-w-fit" onClick={handleApplyFilters}>
             <Filter className="mr-2 h-4 w-4" />
             Apply Filters
           </Button>

@@ -1,3 +1,5 @@
+
+import { useState } from "react";
 import { Zap, BarChart3, Clock, Map, Battery, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +8,26 @@ import DashboardFilters from "@/components/DashboardFilters";
 import TimeSeriesCharts from "@/components/TimeSeriesCharts";
 import ThemeToggle from "@/components/ThemeToggle";
 
+type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
+
 const Index = () => {
+  const [filters, setFilters] = useState<{
+    timeRange: TimeRange;
+    dateRange: { from?: Date; to?: Date };
+    region: string;
+    state: string;
+  }>({
+    timeRange: "1D",
+    dateRange: {},
+    region: "all",
+    state: "all"
+  });
+
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    console.log("Filters changed:", newFilters);
+    setFilters(newFilters);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -76,13 +97,13 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         {/* Global Controls & Filters */}
-        <DashboardFilters />
+        <DashboardFilters onFiltersChange={handleFiltersChange} />
         
         {/* KPI Banner */}
         <KPIBanner />
         
         {/* Time Series Charts */}
-        <TimeSeriesCharts />
+        <TimeSeriesCharts filters={filters} />
       </main>
 
       {/* Footer */}
