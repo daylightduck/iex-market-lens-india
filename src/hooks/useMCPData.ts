@@ -36,6 +36,20 @@ export const useMCPData = (
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   };
 
+  const safeParseMCP = (value: any): number | null => {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    
+    const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+    
+    if (isNaN(numValue) || numValue <= 0) {
+      return null;
+    }
+    
+    return numValue;
+  };
+
   const fetchMCPData = async () => {
     setLoading(true);
     setError(null);
@@ -59,12 +73,13 @@ export const useMCPData = (
         return;
       }
 
-      // Get all unique dates
+      console.log('Raw data sample:', damData.slice(0, 5));
+
+      // Get the most recent date
       const availableDates = Array.from(
         new Set(damData.map((row) => row.Date).filter(Boolean))
       );
 
-      // Use the most recent date for 1D view
       const sortedDates = availableDates.sort((a, b) => {
         return parseDate(b).getTime() - parseDate(a).getTime();
       });
@@ -101,22 +116,26 @@ export const useMCPData = (
         return;
       }
 
+      console.log('Processing dates:', filteredDates);
+
       // Process data for all filtered dates
-      const allHourlyData = new Map<string, number[]>();
+      const allHourlyData = new Map<number, number[]>();
       let allPrices: number[] = [];
       
       filteredDates.forEach(targetDate => {
         const dayData = damData.filter((row) => row.Date === targetDate);
+        console.log(`Data for ${targetDate}:`, dayData.length, 'rows');
         
         // Group by hour for this date
         const hourlyData = new Map<number, number[]>();
         
-        dayData.forEach((row) => {
+        dayData.forEach((row, index) => {
           const hour = Number(row.Hour);
-          const mcpValue = parseFloat(row['MCP (Rs/MWh)']);
+          const mcpValue = safeParseMCP(row['MCP (Rs/MWh)']);
           
-          // More lenient validation - accept any positive number
-          if (hour >= 1 && hour <= 24 && mcpValue > 0 && !isNaN(mcpValue)) {
+          console.log(`Row ${index}: Hour=${hour}, MCP=${mcpValue}, Raw=${row['MCP (Rs/MWh)']}`);
+          
+          if (hour >= 1 && hour <= 24 && mcpValue !== null) {
             if (!hourlyData.has(hour)) {
               hourlyData.set(hour, []);
             }
@@ -125,53 +144,64 @@ export const useMCPData = (
           }
         });
 
-        // Calculate hourly averages for ALL 24 hours
+        console.log('Hours with data:', Array.from(hourlyData.keys()).sort((a, b) => a - b));
+
+        // Store hourly averages
         for (let hour = 1; hour <= 24; hour++) {
           const hourPrices = hourlyData.get(hour);
           if (hourPrices && hourPrices.length > 0) {
             const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
-            // Convert hour to display format (1-24 becomes 01:00-24:00, but 24 becomes 00:00)
-            const displayHour = hour === 24 ? 0 : hour;
-            const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
             
-            if (!allHourlyData.has(timeLabel)) {
-              allHourlyData.set(timeLabel, []);
+            if (!allHourlyData.has(hour)) {
+              allHourlyData.set(hour, []);
             }
-            allHourlyData.get(timeLabel)!.push(avgPrice);
+            allHourlyData.get(hour)!.push(avgPrice);
           }
         }
       });
 
-      // Create hourly points ensuring all 24 hours are included
+      console.log('Final hours with data:', Array.from(allHourlyData.keys()).sort((a, b) => a - b));
+
+      // Create hourly points for ALL 24 hours
       const hourlyPoints: MCPDataPoint[] = [];
       
-      // Process hours 1-23 first (01:00 to 23:00)
-      for (let hour = 1; hour <= 23; hour++) {
-        const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
-        const hourPrices = allHourlyData.get(timeLabel);
+      for (let hour = 1; hour <= 24; hour++) {
+        const hourPrices = allHourlyData.get(hour);
         
         if (hourPrices && hourPrices.length > 0) {
           const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
+          
+          // Convert hour to display format
+          const displayHour = hour === 24 ? 0 : hour;
+          const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+          
           hourlyPoints.push({
             time: timeLabel,
             price: Math.round(avgPrice * 100) / 100
           });
+        } else {
+          // Handle missing hours - you can either skip them or interpolate
+          console.warn(`No data for hour ${hour}`);
+          
+          // Option 1: Skip missing hours (current behavior)
+          // continue;
+          
+          // Option 2: Add placeholder with average of available hours
+          if (allPrices.length > 0) {
+            const globalAvg = allPrices.reduce((sum, price) => sum + price, 0) / allPrices.length;
+            const displayHour = hour === 24 ? 0 : hour;
+            const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+            
+            hourlyPoints.push({
+              time: timeLabel,
+              price: Math.round(globalAvg * 100) / 100
+            });
+          }
         }
-      }
-      
-      // Handle hour 24 (which displays as 00:00)
-      const midnightPrices = allHourlyData.get('00:00');
-      if (midnightPrices && midnightPrices.length > 0) {
-        const avgPrice = midnightPrices.reduce((sum, price) => sum + price, 0) / midnightPrices.length;
-        hourlyPoints.push({
-          time: '00:00',
-          price: Math.round(avgPrice * 100) / 100
-        });
       }
 
       // Sort by time (00:00 should come first)
       hourlyPoints.sort((a, b) => {
-        // Convert time to minutes for proper sorting
         const timeToMinutes = (time: string) => {
           const [hours, minutes] = time.split(':').map(Number);
           return hours * 60 + minutes;
@@ -179,6 +209,8 @@ export const useMCPData = (
         
         return timeToMinutes(a.time) - timeToMinutes(b.time);
       });
+
+      console.log('Final hourly points:', hourlyPoints.length, hourlyPoints);
 
       // Calculate comprehensive statistics
       if (hourlyPoints.length > 0 && allPrices.length > 0) {
@@ -201,7 +233,6 @@ export const useMCPData = (
         setStats(null);
       }
 
-      console.log('Final hourly points:', hourlyPoints.length, hourlyPoints);
       setData(hourlyPoints);
     } catch (err) {
       console.error('Error fetching MCP data:', err);
