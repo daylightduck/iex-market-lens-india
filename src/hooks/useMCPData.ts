@@ -34,7 +34,7 @@ export const useMCPData = () => {
       if (fetchError) {
         throw fetchError;
       }
-
+      console.log(damData)
       if (!damData || damData.length === 0) {
         setData([]);
         setStats(null);
