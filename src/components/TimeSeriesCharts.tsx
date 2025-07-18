@@ -19,14 +19,47 @@ interface TimeSeriesChartsProps {
   };
 }
 
+// Enhanced dummy data for Demand & Supply Trend (24-hour cycle)
+const demandSupplyData = [
+  { time: "00:00", demand: 3.2, supply: 12.1 },
+  { time: "01:00", demand: 2.9, supply: 11.8 },
+  { time: "02:00", demand: 2.8, supply: 11.2 },
+  { time: "03:00", demand: 2.6, supply: 10.9 },
+  { time: "04:00", demand: 2.8, supply: 11.5 },
+  { time: "05:00", demand: 3.1, supply: 12.0 },
+  { time: "06:00", demand: 3.5, supply: 12.8 },
+  { time: "07:00", demand: 4.0, supply: 13.2 },
+  { time: "08:00", demand: 4.4, supply: 13.7 },
+  { time: "09:00", demand: 4.9, supply: 14.1 },
+  { time: "10:00", demand: 5.0, supply: 14.3 },
+  { time: "11:00", demand: 5.4, supply: 14.7 },
+  { time: "12:00", demand: 5.1, supply: 14.2 },
+  { time: "13:00", demand: 4.8, supply: 13.6 },
+  { time: "14:00", demand: 4.5, supply: 13.3 },
+  { time: "15:00", demand: 4.6, supply: 13.4 },
+  { time: "16:00", demand: 4.7, supply: 13.8 },
+  { time: "17:00", demand: 4.9, supply: 14.1 },
+  { time: "18:00", demand: 4.4, supply: 13.7 },
+  { time: "19:00", demand: 4.1, supply: 13.2 },
+  { time: "20:00", demand: 3.6, supply: 12.7 },
+  { time: "21:00", demand: 3.3, supply: 12.3 },
+  { time: "22:00", demand: 3.1, supply: 12.0 },
+  { time: "23:00", demand: 3.0, supply: 11.5 },
+];
+
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 shadow-lg">
-        <p className="text-sm font-medium text-white">{`Hour: ${label}`}</p>
-        <p className="text-sm text-white">
-          {`Avg MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
-        </p>
+      <div className="bg-card border border-border rounded-lg p-3 shadow-trading">
+        <p className="text-sm font-medium text-foreground">{`Time: ${label}`}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.dataKey === 'price' 
+              ? `${entry.name}: ₹${entry.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+              : `${entry.name}: ${entry.value} GW`
+            }
+          </p>
+        ))}
       </div>
     );
   }
@@ -159,98 +192,151 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
         )}
       </Card>
 
-      {/* MCP Chart */}
-      <Card className="p-0 bg-[#0D1117] border-[#30363d] hover:shadow-trading transition-all duration-300">
-        <div className="p-6 pb-2">
-          <h3 className="text-xl font-bold text-white text-center mb-1 font-['Inter',sans-serif]">
-            Market Clearing Price (MCP) — {selectedTimeRange === "custom" ? "Custom Period" : `Last ${selectedTimeRange}`}
-          </h3>
-          <p className="text-sm text-[#8b949e] text-center">
-            {loading ? 'Loading market data...' : `${mcpData.length} hourly averages • Average: ₹${stats?.average.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '--'}/MWh`}
-          </p>
-        </div>
-        <div className="h-96 px-6 pb-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-              <span className="ml-2 text-white text-sm">Loading MCP data...</span>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-sm text-red-400">Error loading MCP data</p>
-                <p className="text-xs text-[#8b949e] mt-1">{error}</p>
-              </div>
-            </div>
-          ) : mcpData.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-sm text-[#8b949e]">No MCP data available</p>
-                <p className="text-xs text-[#8b949e] mt-1">Try a different time range</p>
-              </div>
-            </div>
-          ) : (
+      {/* Two-column layout for both charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Demand vs Supply Chart */}
+        <Card className="p-6 bg-card border-border hover:shadow-trading transition-all duration-300">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Demand & Supply Trend</h3>
+            <p className="text-sm text-muted-foreground">Real-time power demand and supply over 24 hours</p>
+          </div>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mcpData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                <defs>
-                  <linearGradient id="midnightGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor="#1e3a8a" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="averageLine" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.8}/>
-                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.8}/>
-                  </linearGradient>
-                </defs>
+              <LineChart data={demandSupplyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="time" 
-                  stroke="#D1D5DA"
-                  fontSize={11}
-                  tickLine={{ stroke: '#D1D5DA' }}
-                  axisLine={{ stroke: '#D1D5DA' }}
-                  interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  interval="preserveStartEnd"
                 />
                 <YAxis 
-                  stroke="#D1D5DA"
-                  fontSize={11}
-                  tickLine={{ stroke: '#D1D5DA' }}
-                  axisLine={{ stroke: '#D1D5DA' }}
-                  tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
-                  domain={['dataMin - 200', 'dataMax + 200']}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  label={{ value: 'Power (GW)', angle: -90, position: 'insideLeft' }}
                 />
-                <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
                 <Tooltip content={<CustomTooltip />} />
-                
-                {/* Average line */}
-                {stats && (
-                  <Line
-                    type="monotone"
-                    dataKey={() => stats.average}
-                    stroke="#fbbf24"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                    name="Average"
-                  />
-                )}
-                
-                <Area
-                  type="monotone"
-                  dataKey="price"
-                  stroke="#ffffff"
-                  strokeWidth={2}
-                  fill="url(#midnightGradient)"
-                  dot={{ fill: "#ffffff", strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2 }}
+                <Line 
+                  type="monotone" 
+                  dataKey="demand" 
+                  stroke="hsl(var(--bearish))" 
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--bearish))", r: 4 }}
+                  name="Demand"
                 />
-              </AreaChart>
+                <Line 
+                  type="monotone" 
+                  dataKey="supply" 
+                  stroke="hsl(var(--bullish))" 
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--bullish))", r: 4 }}
+                  name="Supply"
+                />
+              </LineChart>
             </ResponsiveContainer>
-          )}
-        </div>
-      </Card>
+          </div>
+          <div className="flex justify-center space-x-6 mt-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-0.5 bg-bearish rounded"></div>
+              <span className="text-sm text-muted-foreground">Demand</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-0.5 bg-bullish rounded"></div>
+              <span className="text-sm text-muted-foreground">Supply</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* MCP Chart */}
+        <Card className="p-0 bg-[#0D1117] border-[#30363d] hover:shadow-trading transition-all duration-300">
+          <div className="p-6 pb-2">
+            <h3 className="text-xl font-bold text-white text-center mb-1 font-['Inter',sans-serif]">
+              Market Clearing Price (MCP) — {selectedTimeRange === "custom" ? "Custom Period" : `Last ${selectedTimeRange}`}
+            </h3>
+            <p className="text-sm text-[#8b949e] text-center">
+              {loading ? 'Loading market data...' : `${mcpData.length} hourly averages • Average: ₹${stats?.average.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '--'}/MWh`}
+            </p>
+          </div>
+          <div className="h-96 px-6 pb-4">
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                <span className="ml-2 text-white text-sm">Loading MCP data...</span>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <p className="text-sm text-red-400">Error loading MCP data</p>
+                  <p className="text-xs text-[#8b949e] mt-1">{error}</p>
+                </div>
+              </div>
+            ) : mcpData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <p className="text-sm text-[#8b949e]">No MCP data available</p>
+                  <p className="text-xs text-[#8b949e] mt-1">Try a different time range</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={mcpData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                  <defs>
+                    <linearGradient id="midnightGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.8}/>
+                      <stop offset="100%" stopColor="#1e3a8a" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis 
+                    dataKey="time" 
+                    stroke="#D1D5DA"
+                    fontSize={11}
+                    tickLine={{ stroke: '#D1D5DA' }}
+                    axisLine={{ stroke: '#D1D5DA' }}
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    stroke="#D1D5DA"
+                    fontSize={11}
+                    tickLine={{ stroke: '#D1D5DA' }}
+                    axisLine={{ stroke: '#D1D5DA' }}
+                    tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
+                    domain={['dataMin - 200', 'dataMax + 200']}
+                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 shadow-lg">
+                            <p className="text-sm font-medium text-white">{`Time: ${label}`}</p>
+                            <p className="text-sm text-white">
+                              {`MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  
+                  <Area
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                    fill="url(#midnightGradient)"
+                    dot={{ fill: "#ffffff", strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
