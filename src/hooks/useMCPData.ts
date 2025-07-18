@@ -29,50 +29,12 @@ export const useMCPData = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const getDateFilter = (): { from: string; to: string } => {
-    const now = new Date();
-    let from: Date;
-    let to: Date = now;
-
-    switch (timeRange) {
-      case '1D':
-        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '1W':
-        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '1M':
-        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '1Y':
-        from = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      case 'custom':
-        from = dateRange?.from ?? now;
-        to = dateRange?.to ?? now;
-        break;
-      default:
-        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    }
-
-    // Supabase stores dates as text "DD-MM-YYYY"
-    const formatDate = (d: Date) =>
-      d
-        .toLocaleDateString('en-GB') // "DD/MM/YYYY"
-        .split('/')
-        .join('-'); // "DD-MM-YYYY"
-
-    return { from: formatDate(from), to: formatDate(to) };
-  };
-
   const fetchMCPData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const { from, to } = getDateFilter();
-
-      // Query supabase - let's get all data first to debug
+      // Get all data from Supabase
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
         .select('*')
@@ -83,51 +45,91 @@ export const useMCPData = (
       if (fetchError) {
         throw fetchError;
       }
+
       if (!damData || damData.length === 0) {
         setData([]);
         setStats(null);
         return;
       }
 
-      // Process into time-series points for the first available date
+      console.log('Raw data from Supabase:', damData);
+
+      // Get unique dates and use the first available date
       const availableDates = Array.from(
         new Set(damData.map((row) => row.Date).filter(Boolean))
       );
+      
+      if (availableDates.length === 0) {
+        setData([]);
+        setStats(null);
+        return;
+      }
+
       const targetDate = availableDates[0];
-      const rows = damData.filter((r) => r.Date === targetDate);
+      console.log('Using target date:', targetDate);
 
-      const points: MCPDataPoint[] = rows.map((row) => {
-        // extract start time from "HH:MM - HH:MM"
-        const match = row['Time Block']?.match(/^(\d{1,2}):(\d{2})/);
-        const time = match
-          ? `${match[1].padStart(2, '0')}:${match[2]}`
-          : `${String(Number(row.Hour) - 1).padStart(2, '0')}:00`;
-        return {
-          time,
-          price: parseFloat(String(row['MCP (Rs/MWh)']).replace(/[^\d.-]/g, '') || '0'),
-        };
-      });
+      // Filter data for the target date
+      const dayData = damData.filter((row) => row.Date === targetDate);
+      console.log('Filtered data for target date:', dayData);
 
-      // Dedupe and sort
-      const unique = Array.from(
+      // Process data points
+      const points: MCPDataPoint[] = dayData
+        .map((row) => {
+          // Extract hour and MCP value
+          const hour = Number(row.Hour);
+          const mcpValue = Number(row['MCP (Rs/MWh)']);
+          const timeBlock = row['Time Block'];
+
+          // Skip invalid data
+          if (!hour || !mcpValue || !timeBlock) return null;
+
+          // Extract start time from "HH:MM - HH:MM" format
+          const timeMatch = timeBlock.match(/^(\d{1,2}):(\d{2})/);
+          let displayTime = '';
+          
+          if (timeMatch) {
+            displayTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+          } else {
+            // Fallback: use hour to generate time
+            const adjustedHour = hour === 1 ? 0 : hour - 1;
+            displayTime = `${adjustedHour.toString().padStart(2, '0')}:00`;
+          }
+
+          return {
+            time: displayTime,
+            price: Math.round(mcpValue * 100) / 100
+          };
+        })
+        .filter(Boolean) as MCPDataPoint[];
+
+      // Remove duplicates and sort by time
+      const uniquePoints = Array.from(
         new Map(points.map((p) => [p.time, p])).values()
       ).sort((a, b) => a.time.localeCompare(b.time));
 
-      // Compute stats
-      if (unique.length) {
-        const prices = unique.map((p) => p.price);
-        const min = Math.min(...prices);
-        const max = Math.max(...prices);
-        const minTime = unique.find((p) => p.price === min)!.time;
-        const maxTime = unique.find((p) => p.price === max)!.time;
-        setStats({ min, max, minTime, maxTime });
+      console.log('Processed unique points:', uniquePoints);
+
+      // Calculate statistics
+      if (uniquePoints.length > 0) {
+        const prices = uniquePoints.map((p) => p.price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const minPoint = uniquePoints.find((p) => p.price === minPrice);
+        const maxPoint = uniquePoints.find((p) => p.price === maxPrice);
+
+        setStats({
+          min: minPrice,
+          max: maxPrice,
+          minTime: minPoint?.time || '',
+          maxTime: maxPoint?.time || ''
+        });
       } else {
         setStats(null);
       }
 
-      setData(unique);
+      setData(uniquePoints);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching MCP data:', err);
       setError(
         err instanceof Error ? err.message : 'Unexpected error fetching data.'
       );
@@ -138,7 +140,6 @@ export const useMCPData = (
 
   useEffect(() => {
     fetchMCPData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, dateRange?.from, dateRange?.to]);
 
   return { data, stats, loading, error, refetch: fetchMCPData };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
@@ -16,7 +15,6 @@ interface TimeSeriesChartsProps {
   };
 }
 
-// Sample data for demonstration
 const demandSupplyData = [
   { time: "00:00", demand: 3.2, supply: 12.1 },
   { time: "04:00", demand: 2.8, supply: 11.5 },
@@ -35,7 +33,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.dataKey === 'price' 
-              ? `${entry.name}: ₹${entry.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+              ? `MCP: ₹${entry.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`
               : `${entry.name}: ${entry.value} GW`
             }
           </p>
@@ -51,6 +49,9 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
     filters?.timeRange || "1D",
     filters?.dateRange
   );
+
+  console.log('MCP Data in component:', mcpData);
+  console.log('Stats in component:', stats);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -106,31 +107,35 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
         </div>
       </Card>
 
-      {/* Modern MCP Chart */}
+      {/* Enhanced MCP Chart */}
       <Card className="p-0 bg-[#0D1117] border-[#30363d] hover:shadow-trading transition-all duration-300">
         <div className="p-6 pb-2">
           <h3 className="text-xl font-bold text-white text-center mb-1 font-['Inter',sans-serif]">
-            Market Clearing Price (MCP) — {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+            Market Clearing Price (MCP) — 02 July 2025
           </h3>
           <p className="text-sm text-[#8b949e] text-center">
-            {loading ? 'Loading...' : 'Historical price trends with min/max indicators'}
+            {loading ? 'Loading market data...' : `${mcpData.length} time blocks • Min-Max indicators`}
           </p>
         </div>
         <div className="h-80 px-6 pb-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
+              <span className="ml-2 text-white text-sm">Loading MCP data...</span>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <p className="text-sm text-red-400">Error loading data</p>
+                <p className="text-sm text-red-400">Error loading MCP data</p>
                 <p className="text-xs text-[#8b949e] mt-1">{error}</p>
               </div>
             </div>
           ) : mcpData.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-[#8b949e]">No MCP data available for selected period</p>
+              <div className="text-center">
+                <p className="text-sm text-[#8b949e]">No MCP data available</p>
+                <p className="text-xs text-[#8b949e] mt-1">Check your database connection</p>
+              </div>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -144,21 +149,22 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                 <XAxis 
                   dataKey="time" 
                   stroke="#D1D5DA"
-                  fontSize={11}
+                  fontSize={10}
                   tickLine={{ stroke: '#D1D5DA' }}
                   axisLine={{ stroke: '#D1D5DA' }}
-                  interval="preserveStartEnd"
+                  interval={0}
                   angle={-45}
                   textAnchor="end"
                   height={70}
+                  tick={{ fontSize: 10 }}
                 />
                 <YAxis 
                   stroke="#D1D5DA"
-                  fontSize={11}
+                  fontSize={10}
                   tickLine={{ stroke: '#D1D5DA' }}
                   axisLine={{ stroke: '#D1D5DA' }}
                   tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
-                  domain={['dataMin - 500', 'dataMax + 500']}
+                  domain={['dataMin - 200', 'dataMax + 200']}
                 />
                 <Tooltip 
                   content={({ active, payload, label }) => {
@@ -181,8 +187,8 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                   stroke="#ffffff"
                   strokeWidth={2}
                   fill="url(#midnightGradient)"
-                  dot={{ fill: "#ffffff", strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, fill: "#ffffff", strokeWidth: 2 }}
+                  dot={{ fill: "#ffffff", strokeWidth: 2, r: 2 }}
+                  activeDot={{ r: 4, fill: "#ffffff", strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -192,13 +198,13 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
           <div className="text-left">
             <span className="text-sm font-medium text-green-400">Min: </span>
             <span className="text-sm text-green-400">
-              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
+              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh at ${stats.minTime}` : '--'}
             </span>
           </div>
           <div className="text-right">
             <span className="text-sm font-medium text-red-400">Max: </span>
             <span className="text-sm text-red-400">
-              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
+              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh at ${stats.maxTime}` : '--'}
             </span>
           </div>
         </div>
