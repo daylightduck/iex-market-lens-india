@@ -41,7 +41,7 @@ export const useMCPData = (
         .order('Date', { ascending: true })
         .order('Hour', { ascending: true })
         .order('Time Block', { ascending: true });
-
+ console.log('Raw data from Supabase:', damData);
       if (fetchError) {
         throw fetchError;
       }
@@ -52,7 +52,7 @@ export const useMCPData = (
         return;
       }
 
-      console.log('Raw data from Supabase:', damData);
+     
 
       // Get unique dates and use the first available date
       const availableDates = Array.from(
