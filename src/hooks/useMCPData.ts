@@ -32,6 +32,7 @@ export const useMCPData = () => {
       if (fetchError) {
         throw fetchError;
       }
+      
       console.log("---")
       console.log(damData)
       
