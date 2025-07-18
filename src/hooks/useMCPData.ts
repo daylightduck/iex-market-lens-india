@@ -9,8 +9,10 @@ interface MCPDataPoint {
 interface MCPStats {
   min: number;
   max: number;
+  average: number;
   minTime: string;
   maxTime: string;
+  totalHours: number;
 }
 
 type TimeRange = '1D' | '1W' | '1M' | '1Y' | 'custom';
@@ -29,11 +31,42 @@ export const useMCPData = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getDateRange = () => {
+    const now = new Date();
+    let from: Date;
+    let to: Date = now;
+
+    switch (timeRange) {
+      case '1D':
+        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '1W':
+        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '1M':
+        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '1Y':
+        from = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case 'custom':
+        from = dateRange?.from ?? new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        to = dateRange?.to ?? now;
+        break;
+      default:
+        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    }
+
+    return { from, to };
+  };
+
   const fetchMCPData = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      const { from, to } = getDateRange();
+      
       // Get all data from Supabase
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
@@ -52,45 +85,74 @@ export const useMCPData = (
         return;
       }
 
-      // Get unique dates and use the first available date
+      // Get all unique dates in the dataset
       const availableDates = Array.from(
         new Set(damData.map((row) => row.Date).filter(Boolean))
       );
-      
-      if (availableDates.length === 0) {
+
+      // Filter dates based on time range
+      const filteredDates = availableDates.filter(dateStr => {
+        const [day, month, year] = dateStr.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return date >= from && date <= to;
+      });
+
+      if (filteredDates.length === 0) {
         setData([]);
         setStats(null);
         return;
       }
 
-      const targetDate = availableDates[0];
-      const dayData = damData.filter((row) => row.Date === targetDate);
-
-      // Group data by hour and calculate hourly averages
-      const hourlyData = new Map<number, number[]>();
+      // Process data for all filtered dates
+      const allHourlyData = new Map<string, number[]>();
+      let allPrices: number[] = [];
       
-      dayData.forEach((row) => {
-        const hour = Number(row.Hour);
-        const mcpValue = Number(row['MCP (Rs/MWh)']);
+      filteredDates.forEach(targetDate => {
+        const dayData = damData.filter((row) => row.Date === targetDate);
         
-        if (hour && mcpValue && hour >= 1 && hour <= 24) {
-          if (!hourlyData.has(hour)) {
-            hourlyData.set(hour, []);
+        // Group by hour for this date
+        const hourlyData = new Map<number, number[]>();
+        
+        dayData.forEach((row) => {
+          const hour = Number(row.Hour);
+          const mcpValue = Number(row['MCP (Rs/MWh)']);
+          
+          if (hour && mcpValue && hour >= 1 && hour <= 24) {
+            if (!hourlyData.has(hour)) {
+              hourlyData.set(hour, []);
+            }
+            hourlyData.get(hour)!.push(mcpValue);
+            allPrices.push(mcpValue);
           }
-          hourlyData.get(hour)!.push(mcpValue);
+        });
+
+        // Calculate hourly averages for this date
+        for (let hour = 1; hour <= 24; hour++) {
+          const hourPrices = hourlyData.get(hour);
+          if (hourPrices && hourPrices.length > 0) {
+            const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
+            const displayHour = hour === 24 ? 0 : hour;
+            const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+            const key = `${targetDate}-${timeLabel}`;
+            
+            if (!allHourlyData.has(timeLabel)) {
+              allHourlyData.set(timeLabel, []);
+            }
+            allHourlyData.get(timeLabel)!.push(avgPrice);
+          }
         }
       });
 
-      // Calculate average MCP for each hour
+      // Calculate overall hourly averages across all dates
       const hourlyPoints: MCPDataPoint[] = [];
       
       for (let hour = 1; hour <= 24; hour++) {
-        const hourPrices = hourlyData.get(hour);
+        const displayHour = hour === 24 ? 0 : hour;
+        const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+        const hourPrices = allHourlyData.get(timeLabel);
+        
         if (hourPrices && hourPrices.length > 0) {
           const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
-          const displayHour = hour === 24 ? 0 : hour; // Convert hour 24 to 0 for display
-          const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
-          
           hourlyPoints.push({
             time: timeLabel,
             price: Math.round(avgPrice * 100) / 100
@@ -98,26 +160,29 @@ export const useMCPData = (
         }
       }
 
-      // Sort by time for proper display
+      // Sort by time
       hourlyPoints.sort((a, b) => {
-        const timeA = a.time === '00:00' ? '24:00' : a.time; // Sort 00:00 at the end
+        const timeA = a.time === '00:00' ? '24:00' : a.time;
         const timeB = b.time === '00:00' ? '24:00' : b.time;
         return timeA.localeCompare(timeB);
       });
 
-      // Calculate statistics
-      if (hourlyPoints.length > 0) {
-        const prices = hourlyPoints.map((p) => p.price);
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
+      // Calculate comprehensive statistics
+      if (hourlyPoints.length > 0 && allPrices.length > 0) {
+        const hourlyPrices = hourlyPoints.map((p) => p.price);
+        const minPrice = Math.min(...hourlyPrices);
+        const maxPrice = Math.max(...hourlyPrices);
+        const overallAverage = allPrices.reduce((sum, price) => sum + price, 0) / allPrices.length;
         const minPoint = hourlyPoints.find((p) => p.price === minPrice);
         const maxPoint = hourlyPoints.find((p) => p.price === maxPrice);
 
         setStats({
           min: minPrice,
           max: maxPrice,
+          average: Math.round(overallAverage * 100) / 100,
           minTime: minPoint?.time || '',
-          maxTime: maxPoint?.time || ''
+          maxTime: maxPoint?.time || '',
+          totalHours: hourlyPoints.length
         });
       } else {
         setStats(null);
