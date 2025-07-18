@@ -41,9 +41,7 @@ export const useMCPData = (
         .order('Date', { ascending: true })
         .order('Hour', { ascending: true })
         .order('Time Block', { ascending: true });
-      
-      console.log("---")
-      console.log('Raw data from Supabase:', damData);
+
       if (fetchError) {
         throw fetchError;
       }
@@ -53,8 +51,6 @@ export const useMCPData = (
         setStats(null);
         return;
       }
-
-     
 
       // Get unique dates and use the first available date
       const availableDates = Array.from(
@@ -68,56 +64,54 @@ export const useMCPData = (
       }
 
       const targetDate = availableDates[0];
-      console.log('Using target date:', targetDate);
-
-      // Filter data for the target date
       const dayData = damData.filter((row) => row.Date === targetDate);
-      console.log('Filtered data for target date:', dayData);
 
-      // Process data points
-      const points: MCPDataPoint[] = dayData
-        .map((row) => {
-          // Extract hour and MCP value
-          const hour = Number(row.Hour);
-          const mcpValue = Number(row['MCP (Rs/MWh)']);
-          const timeBlock = row['Time Block'];
-
-          // Skip invalid data
-          if (!hour || !mcpValue || !timeBlock) return null;
-
-          // Extract start time from "HH:MM - HH:MM" format
-          const timeMatch = timeBlock.match(/^(\d{1,2}):(\d{2})/);
-          let displayTime = '';
-          
-          if (timeMatch) {
-            displayTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
-          } else {
-            // Fallback: use hour to generate time
-            const adjustedHour = hour === 1 ? 0 : hour - 1;
-            displayTime = `${adjustedHour.toString().padStart(2, '0')}:00`;
+      // Group data by hour and calculate hourly averages
+      const hourlyData = new Map<number, number[]>();
+      
+      dayData.forEach((row) => {
+        const hour = Number(row.Hour);
+        const mcpValue = Number(row['MCP (Rs/MWh)']);
+        
+        if (hour && mcpValue && hour >= 1 && hour <= 24) {
+          if (!hourlyData.has(hour)) {
+            hourlyData.set(hour, []);
           }
+          hourlyData.get(hour)!.push(mcpValue);
+        }
+      });
 
-          return {
-            time: displayTime,
-            price: Math.round(mcpValue * 100) / 100
-          };
-        })
-        .filter(Boolean) as MCPDataPoint[];
+      // Calculate average MCP for each hour
+      const hourlyPoints: MCPDataPoint[] = [];
+      
+      for (let hour = 1; hour <= 24; hour++) {
+        const hourPrices = hourlyData.get(hour);
+        if (hourPrices && hourPrices.length > 0) {
+          const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
+          const displayHour = hour === 24 ? 0 : hour; // Convert hour 24 to 0 for display
+          const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
+          
+          hourlyPoints.push({
+            time: timeLabel,
+            price: Math.round(avgPrice * 100) / 100
+          });
+        }
+      }
 
-      // Remove duplicates and sort by time
-      const uniquePoints = Array.from(
-        new Map(points.map((p) => [p.time, p])).values()
-      ).sort((a, b) => a.time.localeCompare(b.time));
-
-      console.log('Processed unique points:', uniquePoints);
+      // Sort by time for proper display
+      hourlyPoints.sort((a, b) => {
+        const timeA = a.time === '00:00' ? '24:00' : a.time; // Sort 00:00 at the end
+        const timeB = b.time === '00:00' ? '24:00' : b.time;
+        return timeA.localeCompare(timeB);
+      });
 
       // Calculate statistics
-      if (uniquePoints.length > 0) {
-        const prices = uniquePoints.map((p) => p.price);
+      if (hourlyPoints.length > 0) {
+        const prices = hourlyPoints.map((p) => p.price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
-        const minPoint = uniquePoints.find((p) => p.price === minPrice);
-        const maxPoint = uniquePoints.find((p) => p.price === maxPrice);
+        const minPoint = hourlyPoints.find((p) => p.price === minPrice);
+        const maxPoint = hourlyPoints.find((p) => p.price === maxPrice);
 
         setStats({
           min: minPrice,
@@ -129,7 +123,7 @@ export const useMCPData = (
         setStats(null);
       }
 
-      setData(uniquePoints);
+      setData(hourlyPoints);
     } catch (err) {
       console.error('Error fetching MCP data:', err);
       setError(

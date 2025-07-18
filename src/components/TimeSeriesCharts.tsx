@@ -22,7 +22,6 @@ const demandSupplyData = [
   { time: "12:00", demand: 4.8, supply: 14.0 },
   { time: "16:00", demand: 5.2, supply: 14.5 },
   { time: "20:00", demand: 4.5, supply: 13.8 },
-  { time: "24:00", demand: 3.6, supply: 12.9 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -50,9 +49,6 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
     filters?.dateRange
   );
 
-  console.log('MCP Data in component:', mcpData);
-  console.log('Stats in component:', stats);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* Demand vs Supply Chart */}
@@ -69,6 +65,7 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                 dataKey="time" 
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
+                interval="preserveStartEnd"
               />
               <YAxis 
                 stroke="hsl(var(--muted-foreground))"
@@ -107,14 +104,14 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
         </div>
       </Card>
 
-      {/* Enhanced MCP Chart */}
+      {/* Enhanced MCP Chart - Hourly Display */}
       <Card className="p-0 bg-[#0D1117] border-[#30363d] hover:shadow-trading transition-all duration-300">
         <div className="p-6 pb-2">
           <h3 className="text-xl font-bold text-white text-center mb-1 font-['Inter',sans-serif]">
             Market Clearing Price (MCP) — 02 July 2025
           </h3>
           <p className="text-sm text-[#8b949e] text-center">
-            {loading ? 'Loading market data...' : `${mcpData.length} time blocks • Min-Max indicators`}
+            {loading ? 'Loading market data...' : `${mcpData.length} hourly averages • Min-Max indicators`}
           </p>
         </div>
         <div className="h-80 px-6 pb-4">
@@ -139,7 +136,7 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mcpData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <AreaChart data={mcpData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                 <defs>
                   <linearGradient id="midnightGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.8}/>
@@ -149,31 +146,32 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                 <XAxis 
                   dataKey="time" 
                   stroke="#D1D5DA"
-                  fontSize={10}
+                  fontSize={11}
                   tickLine={{ stroke: '#D1D5DA' }}
                   axisLine={{ stroke: '#D1D5DA' }}
                   interval={0}
                   angle={-45}
                   textAnchor="end"
-                  height={70}
-                  tick={{ fontSize: 10 }}
+                  height={80}
+                  tick={{ fontSize: 11 }}
                 />
                 <YAxis 
                   stroke="#D1D5DA"
-                  fontSize={10}
+                  fontSize={11}
                   tickLine={{ stroke: '#D1D5DA' }}
                   axisLine={{ stroke: '#D1D5DA' }}
                   tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
                   domain={['dataMin - 200', 'dataMax + 200']}
                 />
+                <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
                 <Tooltip 
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 shadow-lg">
-                          <p className="text-sm font-medium text-white">{`Time: ${label}`}</p>
+                          <p className="text-sm font-medium text-white">{`Hour: ${label}`}</p>
                           <p className="text-sm text-white">
-                            {`MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
+                            {`Avg MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
                           </p>
                         </div>
                       );
@@ -187,8 +185,8 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                   stroke="#ffffff"
                   strokeWidth={2}
                   fill="url(#midnightGradient)"
-                  dot={{ fill: "#ffffff", strokeWidth: 2, r: 2 }}
-                  activeDot={{ r: 4, fill: "#ffffff", strokeWidth: 2 }}
+                  dot={{ fill: "#ffffff", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -198,14 +196,20 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
           <div className="text-left">
             <span className="text-sm font-medium text-green-400">Min: </span>
             <span className="text-sm text-green-400">
-              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh at ${stats.minTime}` : '--'}
+              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
             </span>
+            <div className="text-xs text-green-400 opacity-75">
+              {stats?.minTime && `at ${stats.minTime}`}
+            </div>
           </div>
           <div className="text-right">
             <span className="text-sm font-medium text-red-400">Max: </span>
             <span className="text-sm text-red-400">
-              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh at ${stats.maxTime}` : '--'}
+              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
             </span>
+            <div className="text-xs text-red-400 opacity-75">
+              {stats?.maxTime && `at ${stats.maxTime}`}
+            </div>
           </div>
         </div>
       </Card>
