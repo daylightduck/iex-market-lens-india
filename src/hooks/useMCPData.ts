@@ -31,33 +31,9 @@ export const useMCPData = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const getDateRange = () => {
-    const now = new Date();
-    let from: Date;
-    let to: Date = now;
-
-    switch (timeRange) {
-      case '1D':
-        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '1W':
-        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '1M':
-        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '1Y':
-        from = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      case 'custom':
-        from = dateRange?.from ?? new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        to = dateRange?.to ?? now;
-        break;
-      default:
-        from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    }
-
-    return { from, to };
+  const parseDate = (dateStr: string): Date => {
+    const [day, month, year] = dateStr.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   };
 
   const fetchMCPData = async () => {
@@ -65,9 +41,7 @@ export const useMCPData = (
     setError(null);
 
     try {
-      const { from, to } = getDateRange();
-      
-      // Get all data from Supabase
+      // Get all data from Supabase first
       const { data: damData, error: fetchError } = await supabase
         .from('dam_snapshot')
         .select('*')
@@ -80,24 +54,63 @@ export const useMCPData = (
       }
 
       if (!damData || damData.length === 0) {
+        console.log('No data found in database');
         setData([]);
         setStats(null);
         return;
       }
+
+      console.log('Total rows fetched:', damData.length);
 
       // Get all unique dates in the dataset
       const availableDates = Array.from(
         new Set(damData.map((row) => row.Date).filter(Boolean))
       );
 
-      // Filter dates based on time range
-      const filteredDates = availableDates.filter(dateStr => {
-        const [day, month, year] = dateStr.split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        return date >= from && date <= to;
-      });
+      console.log('Available dates:', availableDates);
+
+      // For development/testing: Use available data instead of strict date filtering
+      // This ensures we always show data if it exists
+      let filteredDates: string[] = [];
+
+      if (timeRange === 'custom' && dateRange?.from && dateRange?.to) {
+        // Only filter for custom ranges
+        filteredDates = availableDates.filter(dateStr => {
+          const date = parseDate(dateStr);
+          return date >= dateRange.from! && date <= dateRange.to!;
+        });
+      } else {
+        // For preset ranges, use all available data (for development)
+        // In production, you'd want to implement proper date filtering
+        filteredDates = availableDates;
+        
+        // Alternative: Use the most recent N dates based on timeRange
+        const sortedDates = availableDates.sort((a, b) => {
+          return parseDate(b).getTime() - parseDate(a).getTime();
+        });
+        
+        switch (timeRange) {
+          case '1D':
+            filteredDates = sortedDates.slice(0, 1);
+            break;
+          case '1W':
+            filteredDates = sortedDates.slice(0, 7);
+            break;
+          case '1M':
+            filteredDates = sortedDates.slice(0, 30);
+            break;
+          case '1Y':
+            filteredDates = sortedDates.slice(0, 365);
+            break;
+          default:
+            filteredDates = sortedDates.slice(0, 1);
+        }
+      }
+
+      console.log('Filtered dates:', filteredDates);
 
       if (filteredDates.length === 0) {
+        console.log('No dates match the filter criteria');
         setData([]);
         setStats(null);
         return;
@@ -109,6 +122,7 @@ export const useMCPData = (
       
       filteredDates.forEach(targetDate => {
         const dayData = damData.filter((row) => row.Date === targetDate);
+        console.log(`Processing ${targetDate}: ${dayData.length} rows`);
         
         // Group by hour for this date
         const hourlyData = new Map<number, number[]>();
@@ -133,7 +147,6 @@ export const useMCPData = (
             const avgPrice = hourPrices.reduce((sum, price) => sum + price, 0) / hourPrices.length;
             const displayHour = hour === 24 ? 0 : hour;
             const timeLabel = `${displayHour.toString().padStart(2, '0')}:00`;
-            const key = `${targetDate}-${timeLabel}`;
             
             if (!allHourlyData.has(timeLabel)) {
               allHourlyData.set(timeLabel, []);
@@ -166,6 +179,8 @@ export const useMCPData = (
         const timeB = b.time === '00:00' ? '24:00' : b.time;
         return timeA.localeCompare(timeB);
       });
+
+      console.log('Processed hourly points:', hourlyPoints.length);
 
       // Calculate comprehensive statistics
       if (hourlyPoints.length > 0 && allPrices.length > 0) {
