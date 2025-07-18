@@ -107,16 +107,16 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
       </Card>
 
       {/* Modern MCP Chart */}
-      <Card className="p-0 bg-[#0D1117] border-[#30363d] col-span-full">
+      <Card className="p-0 bg-[#0D1117] border-[#30363d] hover:shadow-trading transition-all duration-300">
         <div className="p-6 pb-2">
           <h3 className="text-xl font-bold text-white text-center mb-1 font-['Inter',sans-serif]">
-            Market Clearing Price (MCP) — 02 July 2025
+            Market Clearing Price (MCP) — {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
           </h3>
           <p className="text-sm text-[#8b949e] text-center">
             {loading ? 'Loading...' : 'Historical price trends with min/max indicators'}
           </p>
         </div>
-        <div className="h-96 px-6 pb-4">
+        <div className="h-80 px-6 pb-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -147,10 +147,10 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                   fontSize={11}
                   tickLine={{ stroke: '#D1D5DA' }}
                   axisLine={{ stroke: '#D1D5DA' }}
-                  interval={15}
-                  angle={0}
-                  textAnchor="middle"
-                  height={50}
+                  interval="preserveStartEnd"
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
                 />
                 <YAxis 
                   stroke="#D1D5DA"
@@ -192,13 +192,13 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
           <div className="text-left">
             <span className="text-sm font-medium text-green-400">Min: </span>
             <span className="text-sm text-green-400">
-              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '₹1,667.48/MWh'}
+              {stats ? `₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
             </span>
           </div>
           <div className="text-right">
             <span className="text-sm font-medium text-red-400">Max: </span>
             <span className="text-sm text-red-400">
-              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '₹5,200.78/MWh'}
+              {stats ? `₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/MWh` : '--'}
             </span>
           </div>
         </div>

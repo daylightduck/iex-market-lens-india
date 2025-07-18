@@ -76,44 +76,63 @@ export const useMCPData = (timeRange: TimeRange = "1D", dateRange?: DateRange) =
       const { from, to } = getDateFilter();
       console.log("Date filter:", { from, to, timeRange });
 
-      // Create 15-minute interval data for 02-07-2025
-      const targetDate = '02-07-2025';
+      // Process the real data from Supabase
+      const validData: MCPDataPoint[] = [];
+      
+      // Get available dates from the data
+      const availableDates = [...new Set(damData.map((row: any) => row['Date']).filter(Boolean))];
+      console.log("Available dates:", availableDates);
+      
+      // Use the first available date if it exists
+      const targetDate = availableDates.length > 0 ? availableDates[0] : null;
+      
+      if (!targetDate) {
+        console.log("No dates found in data");
+        setData([]);
+        setStats(null);
+        return;
+      }
+      
+      console.log("Using target date:", targetDate);
       const filteredData = damData.filter((row: any) => row['Date'] === targetDate);
       
       console.log("Filtered data for", targetDate, ":", filteredData);
       
-      // Create 15-minute intervals (00:00, 00:15, 00:30, 00:45, etc.)
-      const validData: MCPDataPoint[] = [];
+      // Sort by hour and time block to get proper chronological order
+      filteredData.sort((a, b) => {
+        const hourA = parseInt(String(a['Hour'])) || 0;
+        const hourB = parseInt(String(b['Hour'])) || 0;
+        if (hourA !== hourB) return hourA - hourB;
+        
+        // If same hour, sort by time block
+        const timeA = a['Time Block'] || '';
+        const timeB = b['Time Block'] || '';
+        return timeA.localeCompare(timeB);
+      });
       
-      // Generate all 96 time slots (24 hours * 4 quarters)
-      for (let hour = 0; hour < 24; hour++) {
-        for (let quarter = 0; quarter < 4; quarter++) {
-          const minutes = quarter * 15;
-          const timeStr = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-          
-          // Find corresponding data for this hour
-          const hourData = filteredData.find((row: any) => {
-            const hourValue = row['Hour'];
-            return (typeof hourValue === 'string' ? parseInt(hourValue) : hourValue) === hour + 1;
-          });
-          
-          let price = 3000; // Default price
-          if (hourData) {
-            const mcpValue = parseFloat(String(hourData['MCP (Rs/MWh)'])) || 3000;
-            // Add slight variation for 15-min intervals within the hour
-            const variation = (Math.random() - 0.5) * mcpValue * 0.05; // ±5% variation
-            price = Math.max(0, mcpValue + variation);
+      // Process each data point
+      filteredData.forEach((row: any) => {
+        const hour = parseInt(String(row['Hour'])) || 0;
+        const timeBlock = String(row['Time Block'] || '');
+        const mcpValue = parseFloat(String(row['MCP (Rs/MWh)'])) || 0;
+        
+        if (mcpValue > 0 && hour > 0) {
+          // Extract start time from time block (e.g., "00:15 - 00:30" -> "00:15")
+          let displayTime = '';
+          const timeMatch = timeBlock.match(/(\d{1,2}):(\d{2})/);
+          if (timeMatch) {
+            displayTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
           } else {
-            // Use interpolated values based on nearby hours if no direct data
-            price = 2500 + Math.random() * 3000; // Range between 2500-5500
+            // Fallback to hour-based time
+            displayTime = `${(hour - 1).toString().padStart(2, '0')}:00`;
           }
           
           validData.push({
-            time: timeStr,
-            price: Math.round(price * 100) / 100
+            time: displayTime,
+            price: Math.round(mcpValue * 100) / 100
           });
         }
-      }
+      });
 
       // Sort by time and remove duplicates
       const uniqueData = validData
