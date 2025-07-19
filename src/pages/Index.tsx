@@ -83,10 +83,6 @@ const Index = () => {
                 </span>
               </div>
               
-              <div className="flex items-center space-x-2 px-3 py-2 bg-bullish/10 border border-bullish/20 rounded-lg">
-                <BarChart3 className="h-4 w-4 text-bullish" />
-                <span className="text-sm font-medium text-bullish">Market Open</span>
-              </div>
 
               <ThemeToggle />
             </div>

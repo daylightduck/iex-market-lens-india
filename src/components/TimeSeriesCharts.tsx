@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine, ReferenceArea } from "recharts";
 import { useMCPData } from "@/hooks/useMCPData";
 import { Loader2, Calendar as CalendarIcon, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
@@ -331,6 +331,40 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                     dot={{ fill: "#ffffff", strokeWidth: 2, r: 4 }}
                     activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2 }}
                   />
+                  
+                  {/* Min price reference line */}
+                  {stats && (
+                    <ReferenceLine 
+                      y={stats.min} 
+                      stroke="#22c55e" 
+                      strokeDasharray="5 5" 
+                      strokeWidth={2}
+                      label={{ 
+                        value: `Min: ₹${stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, 
+                        position: "insideTopLeft",
+                        fill: "#22c55e",
+                        fontSize: 12,
+                        fontWeight: "bold"
+                      }}
+                    />
+                  )}
+                  
+                  {/* Max price reference line */}
+                  {stats && (
+                    <ReferenceLine 
+                      y={stats.max} 
+                      stroke="#ef4444" 
+                      strokeDasharray="5 5" 
+                      strokeWidth={2}
+                      label={{ 
+                        value: `Max: ₹${stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, 
+                        position: "insideTopRight",
+                        fill: "#ef4444",
+                        fontSize: 12,
+                        fontWeight: "bold"
+                      }}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             )}
