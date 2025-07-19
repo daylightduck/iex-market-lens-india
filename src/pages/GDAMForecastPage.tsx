@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
+import PageNavigation from "@/components/PageNavigation";
 
 // Generate mock forecast data for a day (96 time slots)
 const generateForecastData = (date: Date) => {
@@ -88,6 +89,7 @@ const GDAMForecastPage = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <PageNavigation />
             <Link to="/dam-forecast">
               <Button variant="outline" className="bg-primary/10 border-primary/20 hover:bg-primary/20">
                 DAM Dashboard

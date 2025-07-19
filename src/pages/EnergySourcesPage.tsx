@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Zap, BarChart3, Clock } from "lucide-react";
+import { ArrowLeft, Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import EnergySourceBreakdown from "@/components/EnergySourceBreakdown";
 import ThemeToggle from "@/components/ThemeToggle";
+import PageNavigation from "@/components/PageNavigation";
 
 const EnergySourcesPage = () => {
   return (
@@ -33,6 +34,8 @@ const EnergySourcesPage = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <PageNavigation />
+              
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
@@ -44,11 +47,6 @@ const EnergySourcesPage = () => {
                     second: '2-digit'
                   })} IST
                 </span>
-              </div>
-              
-              <div className="flex items-center space-x-2 px-3 py-2 bg-bullish/10 border border-bullish/20 rounded-lg">
-                <BarChart3 className="h-4 w-4 text-bullish" />
-                <span className="text-sm font-medium text-bullish">Market Open</span>
               </div>
 
               <ThemeToggle />

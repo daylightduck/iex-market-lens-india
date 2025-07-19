@@ -1,12 +1,12 @@
 
 import { useState } from "react";
-import { Zap, BarChart3, Clock, Map, Battery, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KPIBanner from "@/components/KPIBanner";
 import DashboardFilters from "@/components/DashboardFilters";
 import TimeSeriesCharts from "@/components/TimeSeriesCharts";
 import ThemeToggle from "@/components/ThemeToggle";
+import PageNavigation from "@/components/PageNavigation";
 
 type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
 
@@ -49,26 +49,7 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <Link to="/dam-forecast">
-                <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
-                  <TrendingUp className="h-4 w-4" />
-                  DAM Forecast
-                </Button>
-              </Link>
-              
-              <Link to="/regional-market">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Map className="h-4 w-4" />
-                  Regional Market
-                </Button>
-              </Link>
-              
-              <Link to="/energy-sources">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Battery className="h-4 w-4" />
-                  Energy Sources
-                </Button>
-              </Link>
+              <PageNavigation />
 
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
