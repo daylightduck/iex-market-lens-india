@@ -1,18 +1,18 @@
 import { Card } from "@/components/ui/card";
-import { Sun, Wind, Droplets, Flame, Battery, Zap, Atom } from "lucide-react";
+import { Sun, Wind, Droplets, Flame, Battery, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface EnergySourceCardProps {
   title: string;
-  dailyGeneration: number;
-  monthlyCapacity: number;
+  current: number;
+  capacity: number;
   percentage: number;
   trend: "up" | "down" | "stable";
   icon: React.ReactNode;
   color: string;
 }
 
-const EnergySourceCard = ({ title, dailyGeneration, monthlyCapacity, percentage, trend, icon, color }: EnergySourceCardProps) => {
+const EnergySourceCard = ({ title, current, capacity, percentage, trend, icon, color }: EnergySourceCardProps) => {
   const trendIndicator = trend === "up" ? "↗" : trend === "down" ? "↘" : "→";
   const trendColor = trend === "up" ? "text-bullish" : trend === "down" ? "text-bearish" : "text-muted-foreground";
 
@@ -27,28 +27,28 @@ const EnergySourceCard = ({ title, dailyGeneration, monthlyCapacity, percentage,
         </div>
         <div className={`text-sm font-medium ${trendColor} flex items-center space-x-1`}>
           <span>{trendIndicator}</span>
-          <span>{percentage.toFixed(2)}%</span>
+          <span>{percentage}%</span>
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Daily Generation:</span>
-          <span className="font-medium text-foreground">{dailyGeneration} GWH</span>
+          <span className="text-muted-foreground">Current Output:</span>
+          <span className="font-medium text-foreground">{current} GW</span>
         </div>
         
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Monthly Capacity:</span>
-          <span className="font-medium text-foreground">{monthlyCapacity} MW</span>
+          <span className="text-muted-foreground">Installed Capacity:</span>
+          <span className="font-medium text-foreground">{capacity} GW</span>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Capacity Utilization</span>
-            <span className="text-muted-foreground">{percentage.toFixed(2)}%</span>
+            <span className="text-muted-foreground">Utilization</span>
+            <span className="text-muted-foreground">{Math.round((current / capacity) * 100)}%</span>
           </div>
           <Progress 
-            value={percentage} 
+            value={(current / capacity) * 100} 
             className="h-2"
           />
         </div>
@@ -96,64 +96,63 @@ const WeatherCard = ({ title, value, unit, icon, trend }: any) => {
 };
 
 export const EnergySourceBreakdown = () => {
-  // Real data based on the reference image
   const energySources = [
     {
-      title: "Nuclear",
-      dailyGeneration: 136.68, // GWH
-      monthlyCapacity: 8780, // MW
-      percentage: (136.68 / 8780) * 100, // Daily generation / Monthly capacity * 100
-      trend: "stable" as const,
-      icon: <Atom className="h-5 w-5" />,
-      color: "bg-bearish/20 text-bearish",
+      title: "Solar Power",
+      current: 2.8,
+      capacity: 8.2,
+      percentage: 12.5,
+      trend: "up" as const,
+      icon: <Sun className="h-5 w-5" />,
+      color: "bg-warning/20 text-warning",
     },
     {
-      title: "Hydro",
-      dailyGeneration: 756, // GWH
-      monthlyCapacity: 49628.16, // MW
-      percentage: (756 / 49628.16) * 100,
+      title: "Wind Power",
+      current: 1.9,
+      capacity: 6.1,
+      percentage: 8.7,
+      trend: "up" as const,
+      icon: <Wind className="h-5 w-5" />,
+      color: "bg-secondary/20 text-secondary",
+    },
+    {
+      title: "Hydro Power",
+      current: 3.2,
+      capacity: 4.8,
+      percentage: 14.8,
       trend: "stable" as const,
       icon: <Droplets className="h-5 w-5" />,
       color: "bg-primary/20 text-primary",
     },
     {
-      title: "Thermal",
-      dailyGeneration: 3525, // GWH
-      monthlyCapacity: 242039.63, // MW
-      percentage: (3525 / 242039.63) * 100,
+      title: "Thermal Power",
+      current: 5.8,
+      capacity: 12.4,
+      percentage: 26.9,
       trend: "down" as const,
       icon: <Flame className="h-5 w-5" />,
-      color: "bg-warning/20 text-warning",
-    },
-    {
-      title: "RES (Renewable)",
-      dailyGeneration: 44.28, // GWH (Bhutan IMP as renewable import)
-      monthlyCapacity: 184621.03, // MW
-      percentage: (44.28 / 184621.03) * 100,
-      trend: "up" as const,
-      icon: <Sun className="h-5 w-5" />,
-      color: "bg-secondary/20 text-secondary",
+      color: "bg-bearish/20 text-bearish",
     },
   ];
 
   const weatherFactors = [
     {
       title: "Solar Irradiance",
-      value: "850",
+      value: "901",
       unit: "W/m²",
       icon: <Sun className="h-4 w-4" />,
       trend: 8.2
     },
     {
       title: "Wind Speed",
-      value: "12.4",
-      unit: "m/s",
+      value: "7 km/h",
+      unit: "km/h",
       icon: <Wind className="h-4 w-4" />,
       trend: 5.1
     },
     {
       title: "Rainfall",
-      value: "4.2",
+      value: "8.7",
       unit: "mm",
       icon: <Droplets className="h-4 w-4" />,
       trend: -2.3
