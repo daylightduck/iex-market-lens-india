@@ -34,7 +34,7 @@ interface DateRange {
 
 interface DatabaseRow {
   Date: string | null;
-  Hour: number | null;
+  Hour: string | number | null;
   'Time Block': string | null;
   'Purchase Bid (MW)': number | null;
   'Sell Bid (MW)': number | null;
@@ -146,8 +146,8 @@ export const useBidData = (
         const hourlyData = new Map<number, { purchaseBids: number[], sellBids: number[] }>();
         
         dayData.forEach((row) => {
-          const hour = row.Hour;
-          if (hour === null) return;
+          const hour = typeof row.Hour === 'string' ? parseInt(row.Hour) : row.Hour;
+          if (hour === null || isNaN(hour)) return;
           
           const purchaseBidValue = safeParseBid(row['Purchase Bid (MW)']);
           const sellBidValue = safeParseBid(row['Sell Bid (MW)']);
