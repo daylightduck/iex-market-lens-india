@@ -189,26 +189,26 @@ const july2Data = [
   { time: "18:15", price: 2870.07 },
   { time: "18:30", price: 2900.17 },
   { time: "18:45", price: 2999.93 },
-  { time: "19:00", price: 3396.8 },
-  { time: "19:15", price: 3503.86 },
-  { time: "19:30", price: 3913.08 },
-  { time: "19:45", price: 4689.13 },
-  { time: "20:00", price: 4689.03 },
-  { time: "20:15", price: 4639.12 },
-  { time: "20:30", price: 4219.14 },
-  { time: "20:45", price: 4069.95 },
-  { time: "21:00", price: 4119.02 },
-  { time: "21:15", price: 4140 },
-  { time: "21:30", price: 4119.44 },
-  { time: "21:45", price: 4219.15 },
-  { time: "22:00", price: 4589.21 },
-  { time: "22:15", price: 4600.74 },
-  { time: "22:30", price: 4510.6 },
-  { time: "22:45", price: 4589.94 },
-  { time: "23:00", price: 4419.6 },
-  { time: "23:15", price: 4219.04 },
-  { time: "23:30", price: 4069.66 },
-  { time: "23:45", price: 3943.03 }
+  { time: "19:00", price: 3356.8 },
+  { time: "19:15", price: 3463.86 },
+  { time: "19:30", price: 3873.08 },
+  { time: "19:45", price: 4649.13 },
+  { time: "20:00", price: 4649.03 },
+  { time: "20:15", price: 4599.12 },
+  { time: "20:30", price: 4179.14 },
+  { time: "20:45", price: 4029.95 },
+  { time: "21:00", price: 4079.02 },
+  { time: "21:15", price: 4100 },
+  { time: "21:30", price: 4079.44 },
+  { time: "21:45", price: 4179.15 },
+  { time: "22:00", price: 4549.21 },
+  { time: "22:15", price: 4560.74 },
+  { time: "22:30", price: 4470.6 },
+  { time: "22:45", price: 4549.94 },
+  { time: "23:00", price: 4379.6 },
+  { time: "23:15", price: 4179.04 },
+  { time: "23:30", price: 4029.66 },
+  { time: "23:45", price: 3903.03 }
 ];
 
 // 24-hour data for July 3, 2025
@@ -289,26 +289,26 @@ const july3Data = [
   { time: "18:15", price: 2830.07 },
   { time: "18:30", price: 2860.17 },
   { time: "18:45", price: 2959.93 },
-  { time: "19:00", price: 3356.8 },
-  { time: "19:15", price: 3463.86 },
-  { time: "19:30", price: 3873.08 },
-  { time: "19:45", price: 4649.13 },
-  { time: "20:00", price: 4649.03 },
-  { time: "20:15", price: 4599.12 },
-  { time: "20:30", price: 4179.14 },
-  { time: "20:45", price: 4029.95 },
-  { time: "21:00", price: 4079.02 },
-  { time: "21:15", price: 4100 },
-  { time: "21:30", price: 4079.44 },
-  { time: "21:45", price: 4179.15 },
-  { time: "22:00", price: 4549.21 },
-  { time: "22:15", price: 4560.74 },
-  { time: "22:30", price: 4470.6 },
-  { time: "22:45", price: 4549.94 },
-  { time: "23:00", price: 4379.6 },
-  { time: "23:15", price: 4179.04 },
-  { time: "23:30", price: 4029.66 },
-  { time: "23:45", price: 3903.03 }
+  { time: "19:00", price: 3316.8 },
+  { time: "19:15", price: 3423.86 },
+  { time: "19:30", price: 3833.08 },
+  { time: "19:45", price: 4609.13 },
+  { time: "20:00", price: 4609.03 },
+  { time: "20:15", price: 4559.12 },
+  { time: "20:30", price: 4139.14 },
+  { time: "20:45", price: 3989.95 },
+  { time: "21:00", price: 4039.02 },
+  { time: "21:15", price: 4060 },
+  { time: "21:30", price: 4039.44 },
+  { time: "21:45", price: 4139.15 },
+  { time: "22:00", price: 4509.21 },
+  { time: "22:15", price: 4520.74 },
+  { time: "22:30", price: 4430.6 },
+  { time: "22:45", price: 4509.94 },
+  { time: "23:00", price: 4339.6 },
+  { time: "23:15", price: 4139.04 },
+  { time: "23:30", price: 3989.66 },
+  { time: "23:45", price: 3863.03 }
 ];
 
 // July 15, 2025 prediction data (24-hour view with bounds)
@@ -422,7 +422,9 @@ const DAMForecastPage = () => {
   };
 
   const dateKey = selectedDate.toISOString().split('T')[0];
+  console.log('Selected Date:', selectedDate, 'Date Key:', dateKey);
   const currentData = dataMap[dateKey] || july1Data;
+  console.log('Current Data Length:', currentData.length, 'First Data Point:', currentData[0]);
   const isPrediction = dateKey === "2025-07-15";
 
   const calculateStats = (data: any[]) => {
