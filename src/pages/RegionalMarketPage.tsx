@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import GeographicalMap from "@/components/GeographicalMap";
+import Map from "./Map";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
 
@@ -28,24 +28,27 @@ const RegionalMarketPage = () => {
                   <h1 className="text-2xl font-bold text-foreground">
                     Regional Market Analysis
                   </h1>
-                  <p className="text-sm text-muted-foreground">Detailed geographical overview</p>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed geographical overview
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <PageNavigation />
-              
+
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  {new Date().toLocaleString('en-IN', {
-                    timeZone: 'Asia/Kolkata',
+                  {new Date().toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata",
                     hour12: true,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                  })} IST
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}{" "}
+                  IST
                 </span>
               </div>
 
@@ -57,7 +60,7 @@ const RegionalMarketPage = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <GeographicalMap />
+        <Map />
       </main>
 
       {/* Footer */}
@@ -68,7 +71,9 @@ const RegionalMarketPage = () => {
               © 2024 Indian Energy Exchange Regional Market Analysis.
             </div>
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-              <span>Last Updated: {new Date().toLocaleTimeString('en-IN')}</span>
+              <span>
+                Last Updated: {new Date().toLocaleTimeString("en-IN")}
+              </span>
               <span>•</span>
               <span className="text-bullish">Live Data</span>
             </div>
