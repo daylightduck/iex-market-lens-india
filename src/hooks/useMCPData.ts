@@ -94,7 +94,7 @@ export const useMCPData = (
       } else {
         switch (timeRange) {
           case '1D':
-            filteredDates = sortedDates.slice(0, 1);
+            filteredDates = sortedDates.slice(1, 2);
             break;
           case '1W':
             filteredDates = sortedDates.slice(0, 7);
