@@ -57,7 +57,7 @@ export const useBidData = (
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   };
 
-  const safeParseBid = (value: any): number | null => {
+  const safeParseBid = (value: string | number | null): number | null => {
     if (value === null || value === undefined || value === '') {
       return null;
     }
@@ -115,6 +115,7 @@ export const useBidData = (
       } else {
         switch (timeRange) {
           case '1D':
+            filteredDates = sortedDates.slice(1, 2);
             filteredDates = sortedDates.slice(1, 2);
             break;
           case '1W':

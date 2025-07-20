@@ -10,6 +10,7 @@ import RegionalMarketPage from "./pages/RegionalMarketPage";
 import DAMForecastPage from "./pages/DAMForecastPage";
 import GDAMForecastPage from "./pages/GDAMForecastPage";
 import NotFound from "./pages/NotFound";
+import Map from "./pages/Map";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/regional-market" element={<RegionalMarketPage />} />
         <Route path="/dam-forecast" element={<DAMForecastPage />} />
         <Route path="/gdam-forecast" element={<GDAMForecastPage />} />
+        <Route path="/temp" element={<Map />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
