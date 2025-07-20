@@ -75,6 +75,22 @@ const REGIONAL_DATA = {
     demandDate: "30-05-2024",
     energyDate: "30-05-2024",
   },
+  "NORTHERN REGION": {
+    totalCapacity: 138808,
+    maxDemand: 91215,
+    maxEnergy: 2023,
+    capacityDate: "31-05-2025",
+    demandDate: "19-06-2024",
+    energyDate: "12-06-2025",
+  },
+  "NORTH EASTERN REGION": {
+    totalCapacity: 5551,
+    maxDemand: 3939,
+    maxEnergy: 80,
+    capacityDate: "31-05-2025",
+    demandDate: "13-06-2025",
+    energyDate: "20-09-2024",
+  },
   "WESTERN REGION": {
     totalCapacity: 159708,
     maxDemand: 80000,
@@ -83,37 +99,21 @@ const REGIONAL_DATA = {
     demandDate: "08-02-2025",
     energyDate: "25-04-2025",
   },
-  "NORTHERN REGION": {
-    totalCapacity: 120000,
-    maxDemand: 65000,
-    maxEnergy: 1850,
-    capacityDate: "31-05-2025",
-    demandDate: "15-01-2025",
-    energyDate: "20-03-2025",
-  },
   "EASTERN REGION": {
-    totalCapacity: 85000,
-    maxDemand: 45000,
-    maxEnergy: 1200,
+    totalCapacity: 36116,
+    maxDemand: 33014,
+    maxEnergy: 702,
     capacityDate: "31-05-2025",
-    demandDate: "25-11-2024",
-    energyDate: "10-12-2024",
+    demandDate: "13-06-2025",
+    energyDate: "14-06-2025",
   },
   "SOUTHERN REGION": {
-    totalCapacity: 140000,
-    maxDemand: 75000,
-    maxEnergy: 2100,
+    totalCapacity: 135247,
+    maxDemand: 69942,
+    maxEnergy: 1458,
     capacityDate: "31-05-2025",
-    demandDate: "05-04-2025",
-    energyDate: "12-02-2025",
-  },
-  "NORTH EASTERN REGION": {
-    totalCapacity: 25000,
-    maxDemand: 12000,
-    maxEnergy: 450,
-    capacityDate: "31-05-2025",
-    demandDate: "18-01-2025",
-    energyDate: "28-01-2025",
+    demandDate: "21-03-2024",
+    energyDate: "28-03-2025",
   },
 };
 
@@ -257,8 +257,8 @@ const Map: React.FC = () => {
               <CardHeader>
                 <CardTitle className="text-center">Regional Grid Map</CardTitle>
               </CardHeader>
-              <CardContent className="flex justify-center items-center min-h-[600px]">
-                <div className="relative w-full max-w-4xl">
+              <CardContent className="flex justify-center items-center h-[50px]">
+                <div className="relative w-full w-3xl">
                   <ReactDatamaps
                     regionData={createRegionData()}
                     mapLayout={{
