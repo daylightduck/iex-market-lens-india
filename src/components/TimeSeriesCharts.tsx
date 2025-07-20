@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine, ReferenceArea } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
 import { useMCPData } from "@/hooks/useMCPData";
-import { Loader2, Calendar as CalendarIcon, TrendingUp } from "lucide-react";
+import { useBidData } from "@/hooks/useBidData";
+import { Loader2, Calendar as CalendarIcon, TrendingUp, Activity } from "lucide-react";
 import { format } from "date-fns";
 
 type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
@@ -19,44 +20,27 @@ interface TimeSeriesChartsProps {
   };
 }
 
-// Enhanced dummy data for Demand & Supply Trend (24-hour cycle)
-const demandSupplyData = [
-  { time: "00:00", demand: 3.2, supply: 12.1 },
-  { time: "01:00", demand: 2.9, supply: 11.8 },
-  { time: "02:00", demand: 2.8, supply: 11.2 },
-  { time: "03:00", demand: 2.6, supply: 10.9 },
-  { time: "04:00", demand: 2.8, supply: 11.5 },
-  { time: "05:00", demand: 3.1, supply: 12.0 },
-  { time: "06:00", demand: 3.5, supply: 12.8 },
-  { time: "07:00", demand: 4.0, supply: 13.2 },
-  { time: "08:00", demand: 4.4, supply: 13.7 },
-  { time: "09:00", demand: 4.9, supply: 14.1 },
-  { time: "10:00", demand: 5.0, supply: 14.3 },
-  { time: "11:00", demand: 5.4, supply: 14.7 },
-  { time: "12:00", demand: 5.1, supply: 14.2 },
-  { time: "13:00", demand: 4.8, supply: 13.6 },
-  { time: "14:00", demand: 4.5, supply: 13.3 },
-  { time: "15:00", demand: 4.6, supply: 13.4 },
-  { time: "16:00", demand: 4.7, supply: 13.8 },
-  { time: "17:00", demand: 4.9, supply: 14.1 },
-  { time: "18:00", demand: 4.4, supply: 13.7 },
-  { time: "19:00", demand: 4.1, supply: 13.2 },
-  { time: "20:00", demand: 3.6, supply: 12.7 },
-  { time: "21:00", demand: 3.3, supply: 12.3 },
-  { time: "22:00", demand: 3.1, supply: 12.0 },
-  { time: "23:00", demand: 3.0, supply: 11.5 },
-];
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    color: string;
+    name: string;
+    value: number;
+    dataKey: string;
+  }>;
+  label?: string;
+}
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip: React.FC<TooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-trading">
         <p className="text-sm font-medium text-foreground">{`Time: ${label}`}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.dataKey === 'price' 
               ? `${entry.name}: ₹${entry.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-              : `${entry.name}: ${entry.value} GW`
+              : `${entry.name}: ${entry.value.toLocaleString('en-IN', { maximumFractionDigits: 1 })} MW`
             }
           </p>
         ))}
@@ -66,22 +50,57 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
+interface MCPTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+  }>;
+  label?: string;
+}
+
+const MCPTooltip: React.FC<MCPTooltipProps> = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 shadow-lg">
+        <p className="text-sm font-medium text-white">{`Time: ${label}`}</p>
+        <p className="text-sm text-white">
+          {`MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+export const TimeSeriesCharts: React.FC<TimeSeriesChartsProps> = ({ filters }) => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>(filters?.timeRange || "1D");
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState<boolean>(false);
 
   const { data: mcpData, stats, loading, error } = useMCPData(
     selectedTimeRange,
     selectedTimeRange === "custom" ? customDateRange : undefined
   );
 
-  const timeRangeButtons = [
+  const { data: bidData, stats: bidStats, loading: bidLoading, error: bidError } = useBidData(
+    selectedTimeRange,
+    selectedTimeRange === "custom" ? customDateRange : undefined
+  );
+
+  const timeRangeButtons: Array<{ value: TimeRange; label: string }> = [
     { value: "1D", label: "1D" },
     { value: "1W", label: "1W" },
     { value: "1M", label: "1M" },
-    { value: "1Y", label: "1Y" },
   ];
+
+  const handleTimeRangeChange = (value: TimeRange): void => {
+    setSelectedTimeRange(value);
+  };
+
+  const handleCustomDateSelect = (range: { from?: Date; to?: Date } | undefined): void => {
+    setCustomDateRange({ from: range?.from, to: range?.to });
+    setSelectedTimeRange("custom");
+  };
 
   return (
     <div className="space-y-6">
@@ -96,7 +115,7 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                   key={button.value}
                   variant={selectedTimeRange === button.value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedTimeRange(button.value as TimeRange)}
+                  onClick={() => handleTimeRangeChange(button.value)}
                 >
                   {button.label}
                 </Button>
@@ -116,10 +135,7 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                   <Calendar
                     mode="range"
                     selected={{ from: customDateRange.from, to: customDateRange.to }}
-                    onSelect={(range) => {
-                      setCustomDateRange({ from: range?.from, to: range?.to });
-                      setSelectedTimeRange("custom");
-                    }}
+                    onSelect={handleCustomDateSelect}
                     initialFocus
                   />
                 </PopoverContent>
@@ -137,112 +153,141 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
         </div>
       </Card>
 
-      {/* Average MCP Summary Card */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      {/* Summary Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Average MCP Summary Card */}
+        <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Average MCP</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedTimeRange === "custom" ? "Custom Period" : `Last ${selectedTimeRange}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">Average MCP</h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedTimeRange === "custom" ? "Custom Period" : `Last ${selectedTimeRange}`}
-              </p>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-foreground">
+                {loading ? (
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                ) : stats ? (
+                  `₹${stats.average.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                ) : (
+                  "--"
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">per MWh</div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-foreground">
-              {loading ? (
-                <Loader2 className="w-8 h-8 animate-spin" />
-              ) : stats ? (
-                `₹${stats.average.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-              ) : (
-                "--"
-              )}
-            </div>
-            <div className="text-sm text-muted-foreground">per MWh</div>
-          </div>
-        </div>
-        
-        {stats && (
-          <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-border">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Min</div>
-              <div className="text-lg font-semibold text-green-600">
-                ₹{stats.min.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+        </Card>
+
+        {/* Average Bid Summary Card */}
+        <Card className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                <Activity className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <div className="text-xs text-muted-foreground">{stats.minTime}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Max</div>
-              <div className="text-lg font-semibold text-red-600">
-                ₹{stats.max.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Average Bids</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedTimeRange === "custom" ? "Custom Period" : `Last ${selectedTimeRange}`}
+                </p>
               </div>
-              <div className="text-xs text-muted-foreground">{stats.maxTime}</div>
             </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Data Points</div>
-              <div className="text-lg font-semibold text-blue-600">
-                {stats.totalHours}
+            <div className="text-right">
+              <div className="text-lg font-bold text-foreground">
+                {bidLoading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : bidStats ? (
+                  <>
+                    <div className="text-sm text-green-600">
+                      Buy: {bidStats.purchaseBid.average.toLocaleString('en-IN', { maximumFractionDigits: 0 })} MW
+                    </div>
+                    <div className="text-sm text-red-600">
+                      Sell: {bidStats.sellBid.average.toLocaleString('en-IN', { maximumFractionDigits: 0 })} MW
+                    </div>
+                  </>
+                ) : (
+                  "--"
+                )}
               </div>
-              <div className="text-xs text-muted-foreground">hours</div>
             </div>
           </div>
-        )}
-      </Card>
+        </Card>
+      </div>
 
       {/* Two-column layout for both charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Demand vs Supply Chart */}
+        {/* Purchase vs Sell Bid Chart */}
         <Card className="p-6 bg-card border-border hover:shadow-trading transition-all duration-300">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-foreground mb-2">Demand & Supply Trend</h3>
-            <p className="text-sm text-muted-foreground">Real-time power demand and supply over 24 hours</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Purchase vs Sell Bids</h3>
+            <p className="text-sm text-muted-foreground">
+              Average hourly bids over {selectedTimeRange === "custom" ? "custom period" : `last ${selectedTimeRange}`}
+            </p>
           </div>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={demandSupplyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="time" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  label={{ value: 'Power (GW)', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line 
-                  type="monotone" 
-                  dataKey="demand" 
-                  stroke="hsl(var(--bearish))" 
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--bearish))", r: 4 }}
-                  name="Demand"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="supply" 
-                  stroke="hsl(var(--bullish))" 
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--bullish))", r: 4 }}
-                  name="Supply"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {bidLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2 text-sm">Loading bid data...</span>
+              </div>
+            ) : bidError ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <p className="text-sm text-red-500">Error loading bid data</p>
+                  <p className="text-xs text-muted-foreground mt-1">{bidError}</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={bidData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="time" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    label={{ value: 'Volume (MW)', angle: -90, position: 'insideLeft' }}
+                    tickFormatter={(value: number) => `${(value/1000).toFixed(1)}k`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="purchaseBid" 
+                    stroke="hsl(var(--bullish))" 
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--bullish))", r: 4 }}
+                    name="Purchase Bid"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sellBid" 
+                    stroke="hsl(var(--bearish))" 
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--bearish))", r: 4 }}
+                    name="Sell Bid"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
           <div className="flex justify-center space-x-6 mt-4">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-bearish rounded"></div>
-              <span className="text-sm text-muted-foreground">Demand</span>
+              <div className="w-4 h-0.5 bg-bullish rounded"></div>
+              <span className="text-sm text-muted-foreground">Purchase Bid</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-bullish rounded"></div>
-              <span className="text-sm text-muted-foreground">Supply</span>
+              <div className="w-4 h-0.5 bg-bearish rounded"></div>
+              <span className="text-sm text-muted-foreground">Sell Bid</span>
             </div>
           </div>
         </Card>
@@ -302,25 +347,11 @@ export const TimeSeriesCharts = ({ filters }: TimeSeriesChartsProps) => {
                     fontSize={11}
                     tickLine={{ stroke: '#D1D5DA' }}
                     axisLine={{ stroke: '#D1D5DA' }}
-                    tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
+                    tickFormatter={(value: number) => `₹${(value/1000).toFixed(1)}k`}
                     domain={['dataMin - 200', 'dataMax + 200']}
                   />
                   <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                  <Tooltip 
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 shadow-lg">
-                            <p className="text-sm font-medium text-white">{`Time: ${label}`}</p>
-                            <p className="text-sm text-white">
-                              {`MCP: ₹${payload[0].value?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh`}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
+                  <Tooltip content={<MCPTooltip />} />
                   
                   <Area
                     type="monotone"
