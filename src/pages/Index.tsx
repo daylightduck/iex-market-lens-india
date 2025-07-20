@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import KPIBanner from "@/components/KPIBanner";
+
 import DashboardFilters from "@/components/DashboardFilters";
 import TimeSeriesCharts from "@/components/TimeSeriesCharts";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -76,8 +76,6 @@ const Index = () => {
         {/* Global Controls & Filters */}
         <DashboardFilters onFiltersChange={handleFiltersChange} />
         
-        {/* KPI Banner */}
-        <KPIBanner />
         
         {/* Time Series Charts */}
         <TimeSeriesCharts filters={filters} />
