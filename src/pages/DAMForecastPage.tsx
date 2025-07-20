@@ -471,11 +471,112 @@ const july3Data36Hours = [
   { time: "05:45", fullTime: "04-Jul 05:45", price: 4480.96, day: "next" }
 ];
 
+// 96-point prediction data for July 15, 2025 (Full 24 hours in 15-minute intervals)
+const july15PredictionData = [
+  { time: "00:00", fullTime: "15-Jul 00:00", price: 9480.03, lowerBound: 5393.02, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "00:15", fullTime: "15-Jul 00:15", price: 7862.58, lowerBound: 4309.37, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "00:30", fullTime: "15-Jul 00:30", price: 5967.29, lowerBound: 3888.26, upperBound: 7729.38, day: "current", type: "prediction" },
+  { time: "00:45", fullTime: "15-Jul 00:45", price: 5617.15, lowerBound: 3807.82, upperBound: 7306.01, day: "current", type: "prediction" },
+  { time: "01:00", fullTime: "15-Jul 01:00", price: 5453.08, lowerBound: 3711.74, upperBound: 7608.52, day: "current", type: "prediction" },
+  { time: "01:15", fullTime: "15-Jul 01:15", price: 5103.67, lowerBound: 3686.29, upperBound: 5974.78, day: "current", type: "prediction" },
+  { time: "01:30", fullTime: "15-Jul 01:30", price: 4631.96, lowerBound: 3588.55, upperBound: 5746.79, day: "current", type: "prediction" },
+  { time: "01:45", fullTime: "15-Jul 01:45", price: 4607.95, lowerBound: 3586.60, upperBound: 5548.54, day: "current", type: "prediction" },
+  { time: "02:00", fullTime: "15-Jul 02:00", price: 4181.35, lowerBound: 3356.89, upperBound: 5217.73, day: "current", type: "prediction" },
+  { time: "02:15", fullTime: "15-Jul 02:15", price: 4129.19, lowerBound: 3346.56, upperBound: 5169.87, day: "current", type: "prediction" },
+  { time: "02:30", fullTime: "15-Jul 02:30", price: 4301.30, lowerBound: 3396.51, upperBound: 5112.40, day: "current", type: "prediction" },
+  { time: "02:45", fullTime: "15-Jul 02:45", price: 4274.28, lowerBound: 3356.89, upperBound: 5061.89, day: "current", type: "prediction" },
+  { time: "03:00", fullTime: "15-Jul 03:00", price: 4235.71, lowerBound: 3298.49, upperBound: 5057.72, day: "current", type: "prediction" },
+  { time: "03:15", fullTime: "15-Jul 03:15", price: 4189.78, lowerBound: 3298.49, upperBound: 5057.72, day: "current", type: "prediction" },
+  { time: "03:30", fullTime: "15-Jul 03:30", price: 4058.32, lowerBound: 3214.91, upperBound: 4673.31, day: "current", type: "prediction" },
+  { time: "03:45", fullTime: "15-Jul 03:45", price: 3883.80, lowerBound: 3198.31, upperBound: 4675.42, day: "current", type: "prediction" },
+  { time: "04:00", fullTime: "15-Jul 04:00", price: 3977.11, lowerBound: 3328.83, upperBound: 5123.89, day: "current", type: "prediction" },
+  { time: "04:15", fullTime: "15-Jul 04:15", price: 4028.46, lowerBound: 3312.41, upperBound: 5147.19, day: "current", type: "prediction" },
+  { time: "04:30", fullTime: "15-Jul 04:30", price: 4028.46, lowerBound: 3315.73, upperBound: 5147.19, day: "current", type: "prediction" },
+  { time: "04:45", fullTime: "15-Jul 04:45", price: 4326.99, lowerBound: 3555.96, upperBound: 5250.85, day: "current", type: "prediction" },
+  { time: "05:00", fullTime: "15-Jul 05:00", price: 4391.27, lowerBound: 3577.09, upperBound: 5401.67, day: "current", type: "prediction" },
+  { time: "05:15", fullTime: "15-Jul 05:15", price: 4590.06, lowerBound: 3658.44, upperBound: 5533.94, day: "current", type: "prediction" },
+  { time: "05:30", fullTime: "15-Jul 05:30", price: 4712.54, lowerBound: 3779.66, upperBound: 6490.57, day: "current", type: "prediction" },
+  { time: "05:45", fullTime: "15-Jul 05:45", price: 4579.80, lowerBound: 3686.92, upperBound: 6144.13, day: "current", type: "prediction" },
+  { time: "06:00", fullTime: "15-Jul 06:00", price: 4879.33, lowerBound: 3691.65, upperBound: 6453.46, day: "current", type: "prediction" },
+  { time: "06:15", fullTime: "15-Jul 06:15", price: 5062.68, lowerBound: 3787.43, upperBound: 6464.17, day: "current", type: "prediction" },
+  { time: "06:30", fullTime: "15-Jul 06:30", price: 4965.86, lowerBound: 3787.13, upperBound: 6388.72, day: "current", type: "prediction" },
+  { time: "06:45", fullTime: "15-Jul 06:45", price: 4585.77, lowerBound: 3673.17, upperBound: 6017.90, day: "current", type: "prediction" },
+  { time: "07:00", fullTime: "15-Jul 07:00", price: 3817.45, lowerBound: 3270.21, upperBound: 4550.04, day: "current", type: "prediction" },
+  { time: "07:15", fullTime: "15-Jul 07:15", price: 3677.17, lowerBound: 3145.70, upperBound: 4027.18, day: "current", type: "prediction" },
+  { time: "07:30", fullTime: "15-Jul 07:30", price: 3340.65, lowerBound: 2955.09, upperBound: 3801.68, day: "current", type: "prediction" },
+  { time: "07:45", fullTime: "15-Jul 07:45", price: 3191.46, lowerBound: 2791.71, upperBound: 3795.40, day: "current", type: "prediction" },
+  { time: "08:00", fullTime: "15-Jul 08:00", price: 3020.80, lowerBound: 2687.20, upperBound: 3471.01, day: "current", type: "prediction" },
+  { time: "08:15", fullTime: "15-Jul 08:15", price: 2959.60, lowerBound: 2640.52, upperBound: 3359.13, day: "current", type: "prediction" },
+  { time: "08:30", fullTime: "15-Jul 08:30", price: 2810.47, lowerBound: 2373.55, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "08:45", fullTime: "15-Jul 08:45", price: 2775.07, lowerBound: 2374.87, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "09:00", fullTime: "15-Jul 09:00", price: 2829.90, lowerBound: 2378.11, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "09:15", fullTime: "15-Jul 09:15", price: 2887.82, lowerBound: 2427.26, upperBound: 3469.36, day: "current", type: "prediction" },
+  { time: "09:30", fullTime: "15-Jul 09:30", price: 2917.70, lowerBound: 2415.19, upperBound: 3469.36, day: "current", type: "prediction" },
+  { time: "09:45", fullTime: "15-Jul 09:45", price: 2902.05, lowerBound: 2415.07, upperBound: 3469.36, day: "current", type: "prediction" },
+  { time: "10:00", fullTime: "15-Jul 10:00", price: 2709.25, lowerBound: 2313.79, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "10:15", fullTime: "15-Jul 10:15", price: 2685.94, lowerBound: 2205.12, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "10:30", fullTime: "15-Jul 10:30", price: 2674.35, lowerBound: 2214.60, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "10:45", fullTime: "15-Jul 10:45", price: 2574.12, lowerBound: 2214.60, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "11:00", fullTime: "15-Jul 11:00", price: 2574.12, lowerBound: 2214.60, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "11:15", fullTime: "15-Jul 11:15", price: 2562.49, lowerBound: 2197.53, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "11:30", fullTime: "15-Jul 11:30", price: 2569.86, lowerBound: 2197.96, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "11:45", fullTime: "15-Jul 11:45", price: 2551.48, lowerBound: 2202.28, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "12:00", fullTime: "15-Jul 12:00", price: 2602.16, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "12:15", fullTime: "15-Jul 12:15", price: 2602.16, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "12:30", fullTime: "15-Jul 12:30", price: 2602.16, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "12:45", fullTime: "15-Jul 12:45", price: 2567.59, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "13:00", fullTime: "15-Jul 13:00", price: 2567.59, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "13:15", fullTime: "15-Jul 13:15", price: 2516.28, lowerBound: 2159.96, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "13:30", fullTime: "15-Jul 13:30", price: 2516.28, lowerBound: 2159.96, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "13:45", fullTime: "15-Jul 13:45", price: 2567.59, lowerBound: 2205.83, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "14:00", fullTime: "15-Jul 14:00", price: 2639.62, lowerBound: 2201.50, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "14:15", fullTime: "15-Jul 14:15", price: 2643.88, lowerBound: 2218.14, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "14:30", fullTime: "15-Jul 14:30", price: 2662.53, lowerBound: 2222.28, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "14:45", fullTime: "15-Jul 14:45", price: 2793.05, lowerBound: 2229.14, upperBound: 3348.06, day: "current", type: "prediction" },
+  { time: "15:00", fullTime: "15-Jul 15:00", price: 2862.70, lowerBound: 2454.28, upperBound: 3469.36, day: "current", type: "prediction" },
+  { time: "15:15", fullTime: "15-Jul 15:15", price: 2920.76, lowerBound: 2427.02, upperBound: 3469.36, day: "current", type: "prediction" },
+  { time: "15:30", fullTime: "15-Jul 15:30", price: 3068.98, lowerBound: 2588.47, upperBound: 3760.67, day: "current", type: "prediction" },
+  { time: "15:45", fullTime: "15-Jul 15:45", price: 3127.26, lowerBound: 2664.36, upperBound: 3760.67, day: "current", type: "prediction" },
+  { time: "16:00", fullTime: "15-Jul 16:00", price: 3143.02, lowerBound: 2727.78, upperBound: 3760.67, day: "current", type: "prediction" },
+  { time: "16:15", fullTime: "15-Jul 16:15", price: 3165.55, lowerBound: 2731.24, upperBound: 3795.40, day: "current", type: "prediction" },
+  { time: "16:30", fullTime: "15-Jul 16:30", price: 3168.07, lowerBound: 2742.03, upperBound: 3795.40, day: "current", type: "prediction" },
+  { time: "16:45", fullTime: "15-Jul 16:45", price: 3275.46, lowerBound: 2792.05, upperBound: 3795.40, day: "current", type: "prediction" },
+  { time: "17:00", fullTime: "15-Jul 17:00", price: 3373.33, lowerBound: 2929.84, upperBound: 3801.68, day: "current", type: "prediction" },
+  { time: "17:15", fullTime: "15-Jul 17:15", price: 3364.27, lowerBound: 2945.96, upperBound: 3810.34, day: "current", type: "prediction" },
+  { time: "17:30", fullTime: "15-Jul 17:30", price: 3415.50, lowerBound: 2945.96, upperBound: 3908.89, day: "current", type: "prediction" },
+  { time: "17:45", fullTime: "15-Jul 17:45", price: 3599.87, lowerBound: 3077.16, upperBound: 4005.63, day: "current", type: "prediction" },
+  { time: "18:00", fullTime: "15-Jul 18:00", price: 3816.47, lowerBound: 3265.49, upperBound: 4576.21, day: "current", type: "prediction" },
+  { time: "18:15", fullTime: "15-Jul 18:15", price: 4255.02, lowerBound: 3676.35, upperBound: 4988.49, day: "current", type: "prediction" },
+  { time: "18:30", fullTime: "15-Jul 18:30", price: 6005.02, lowerBound: 4491.93, upperBound: 9488.23, day: "current", type: "prediction" },
+  { time: "18:45", fullTime: "15-Jul 18:45", price: 9172.30, lowerBound: 5910.09, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "19:00", fullTime: "15-Jul 19:00", price: 9192.26, lowerBound: 6404.34, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "19:15", fullTime: "15-Jul 19:15", price: 9419.62, lowerBound: 6541.98, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "19:30", fullTime: "15-Jul 19:30", price: 9575.50, lowerBound: 7012.93, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "19:45", fullTime: "15-Jul 19:45", price: 9652.87, lowerBound: 7098.95, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "20:00", fullTime: "15-Jul 20:00", price: 9651.19, lowerBound: 7204.55, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "20:15", fullTime: "15-Jul 20:15", price: 9857.01, lowerBound: 9460.89, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "20:30", fullTime: "15-Jul 20:30", price: 9849.60, lowerBound: 9502.87, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "20:45", fullTime: "15-Jul 20:45", price: 9849.60, lowerBound: 9698.62, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "21:00", fullTime: "15-Jul 21:00", price: 9860.11, lowerBound: 9693.13, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "21:15", fullTime: "15-Jul 21:15", price: 9884.00, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "21:30", fullTime: "15-Jul 21:30", price: 9884.00, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "21:45", fullTime: "15-Jul 21:45", price: 9884.00, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "22:00", fullTime: "15-Jul 22:00", price: 9884.00, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "22:15", fullTime: "15-Jul 22:15", price: 9887.16, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "22:30", fullTime: "15-Jul 22:30", price: 9887.16, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "22:45", fullTime: "15-Jul 22:45", price: 9887.16, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "23:00", fullTime: "15-Jul 23:00", price: 9894.57, lowerBound: 9754.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "23:15", fullTime: "15-Jul 23:15", price: 9896.92, lowerBound: 9716.45, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "23:30", fullTime: "15-Jul 23:30", price: 9637.67, lowerBound: 7223.39, upperBound: 10000.00, day: "current", type: "prediction" },
+  { time: "23:45", fullTime: "15-Jul 23:45", price: 9431.04, lowerBound: 6493.21, upperBound: 10000.00, day: "current", type: "prediction" }
+];
+
 // Data lookup for each date
 const dataLookup: { [key: string]: any[] } = {
   "2025-07-01": july1Data36Hours,
   "2025-07-02": july2Data36Hours,
   "2025-07-03": july3Data36Hours,
+  "2025-07-15": july15PredictionData,
   // Add more dates as needed
 };
 
@@ -524,8 +625,16 @@ const DAMForecastPage = () => {
         <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
           <p className="text-sm font-medium">{data.fullTime}</p>
           <p className="text-sm text-primary">
-            MCP: ₹{payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh
+            {data.type === 'prediction' ? 'Predicted ' : ''}MCP: ₹{payload[0].value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/MWh
           </p>
+          {data.type === 'prediction' && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Range: ₹{data.lowerBound.toFixed(0)} - ₹{data.upperBound.toFixed(0)}
+              </p>
+              <p className="text-xs text-accent">Prediction</p>
+            </>
+          )}
           {data.day === 'prev' && <p className="text-xs text-muted-foreground">Previous Day</p>}
           {data.day === 'next' && <p className="text-xs text-muted-foreground">Next Day</p>}
         </div>
@@ -602,12 +711,12 @@ const DAMForecastPage = () => {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   className="pointer-events-auto"
-                  disabled={(date) => {
+                    disabled={(date) => {
                     const day = date.getDate();
                     const month = date.getMonth();
                     const year = date.getFullYear();
-                    // Allow July 1-3, 2025
-                    return !(year === 2025 && month === 6 && (day >= 1 && day <= 3));
+                    // Allow July 1-3, 15, 2025
+                    return !(year === 2025 && month === 6 && ((day >= 1 && day <= 3) || day === 15));
                   }}
                 />
               </PopoverContent>
@@ -683,6 +792,12 @@ const DAMForecastPage = () => {
                           <ReferenceLine x="04-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
                         </>
                       )}
+                      {dateKey === "2025-07-15" && (
+                        <>
+                          <ReferenceLine x="15-Jul 00:00" stroke="hsl(var(--accent))" strokeDasharray="2 2" />
+                          <ReferenceLine x="15-Jul 12:00" stroke="hsl(var(--muted-foreground))" strokeDasharray="1 1" />
+                        </>
+                      )}
                       
                       {/* Average reference line for current day only */}
                       <ReferenceLine y={avgPrice} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" />
@@ -690,16 +805,17 @@ const DAMForecastPage = () => {
                       <Line 
                         type="monotone" 
                         dataKey="price" 
-                        stroke="hsl(var(--primary))" 
+                        stroke={dateKey === "2025-07-15" ? "hsl(var(--accent))" : "hsl(var(--primary))"} 
                         strokeWidth={2}
+                        strokeDasharray={dateKey === "2025-07-15" ? "5 5" : "0"}
                         dot={(props) => {
                           const { payload } = props;
-                          let fill = "hsl(var(--primary))";
+                          let fill = dateKey === "2025-07-15" ? "hsl(var(--accent))" : "hsl(var(--primary))";
                           if (payload.day === "prev") fill = "hsl(var(--muted-foreground))";
                           if (payload.day === "next") fill = "hsl(var(--muted-foreground))";
                           return <circle {...props} fill={fill} r={2} />;
                         }}
-                        activeDot={{ r: 4, stroke: "hsl(var(--primary))", strokeWidth: 2 }}
+                        activeDot={{ r: 4, stroke: dateKey === "2025-07-15" ? "hsl(var(--accent))" : "hsl(var(--primary))", strokeWidth: 2 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -710,7 +826,10 @@ const DAMForecastPage = () => {
 
           {/* Summary Statistics - Dynamic based on selected date */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold">{formatDateForTitle(selectedDate).split(',')[0]} Statistics</h3>
+            <h3 className="text-lg font-semibold">
+              {formatDateForTitle(selectedDate).split(',')[0]} 
+              {dateKey === "2025-07-15" && <span className="text-accent"> (Prediction)</span>}
+            </h3>
             
             <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/10">
               <CardContent className="p-6">
