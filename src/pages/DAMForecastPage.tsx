@@ -408,7 +408,7 @@ const july15PredictionData = [
   { time: "23:00", price: 9894.57, upperBound: 10000.00, lowerBound: 9754.39 },
   { time: "23:15", price: 9896.92, upperBound: 10000.00, lowerBound: 9716.45 },
   { time: "23:30", price: 9637.67, upperBound: 10000.00, lowerBound: 7223.39 },
-  { time: "23:45", price: 9431.04, upperBound: 10000.00, lowerBound: 6493.21 }
+  { time: "23:45", price: 9431.04, upperBound: 10000.00, lowerBound: 6493.21 },
 ];
 
 const DAMForecastPage = () => {
@@ -563,7 +563,7 @@ const DAMForecastPage = () => {
                     <YAxis 
                       tick={{ fontSize: 12 }}
                       domain={['dataMin - 100', 'dataMax + 100']}
-                      tickFormatter={(value) => `₹${value}`}
+                      tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
                     />
                     <Tooltip 
                       labelFormatter={(label) => `Time: ${label}`}
@@ -578,7 +578,7 @@ const DAMForecastPage = () => {
                         borderRadius: '8px'
                       }}
                     />
-                    <ReferenceLine y={stats.avg} stroke="hsl(var(--primary))" strokeDasharray="5 5" label={{ value: `Avg: ₹${stats.avg}` }} />
+                    
                     
                     {/* Upper and Lower bound lines for predictions */}
                     {isPrediction && (
