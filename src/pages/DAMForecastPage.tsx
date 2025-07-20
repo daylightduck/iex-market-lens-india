@@ -318,26 +318,204 @@ const july2Data36Hours = [
   { time: "05:45", fullTime: "03-Jul 05:45", price: 3569.16, day: "next" }
 ];
 
+// July 3, 4, 5 datasets following the same pattern...
+const july3Data36Hours = [
+  // July 2, 2025 - Last 6 hours (18:00-24:00)
+  { time: "18:00", fullTime: "02-Jul 18:00", price: 2868.06, day: "prev" },
+  { time: "18:15", fullTime: "02-Jul 18:15", price: 2950.59, day: "prev" },
+  { time: "18:30", fullTime: "02-Jul 18:30", price: 2999.93, day: "prev" },
+  { time: "18:45", fullTime: "02-Jul 18:45", price: 3349.8, day: "prev" },
+  { time: "19:00", fullTime: "02-Jul 19:00", price: 3655.96, day: "prev" },
+  { time: "19:15", fullTime: "02-Jul 19:15", price: 4689.26, day: "prev" },
+  { time: "19:30", fullTime: "02-Jul 19:30", price: 5200.19, day: "prev" },
+  { time: "19:45", fullTime: "02-Jul 19:45", price: 5200.78, day: "prev" },
+  { time: "20:00", fullTime: "02-Jul 20:00", price: 5000.85, day: "prev" },
+  { time: "20:15", fullTime: "02-Jul 20:15", price: 5051.92, day: "prev" },
+  { time: "20:30", fullTime: "02-Jul 20:30", price: 5200.17, day: "prev" },
+  { time: "20:45", fullTime: "02-Jul 20:45", price: 4999.38, day: "prev" },
+  { time: "21:00", fullTime: "02-Jul 21:00", price: 4689.85, day: "prev" },
+  { time: "21:15", fullTime: "02-Jul 21:15", price: 4811.34, day: "prev" },
+  { time: "21:30", fullTime: "02-Jul 21:30", price: 4999.72, day: "prev" },
+  { time: "21:45", fullTime: "02-Jul 21:45", price: 4999.72, day: "prev" },
+  { time: "22:00", fullTime: "02-Jul 22:00", price: 4774.26, day: "prev" },
+  { time: "22:15", fullTime: "02-Jul 22:15", price: 4999.43, day: "prev" },
+  { time: "22:30", fullTime: "02-Jul 22:30", price: 4811.68, day: "prev" },
+  { time: "22:45", fullTime: "02-Jul 22:45", price: 5010.56, day: "prev" },
+  { time: "23:00", fullTime: "02-Jul 23:00", price: 4672.16, day: "prev" },
+  { time: "23:15", fullTime: "02-Jul 23:15", price: 4219.59, day: "prev" },
+  { time: "23:30", fullTime: "02-Jul 23:30", price: 4119.24, day: "prev" },
+  { time: "23:45", fullTime: "02-Jul 23:45", price: 4013.26, day: "prev" },
+  
+  // July 3, 2025 - Full 24 hours
+  { time: "00:00", fullTime: "03-Jul 00:00", price: 4061.03, day: "current" },
+  { time: "00:15", fullTime: "03-Jul 00:15", price: 4042.12, day: "current" },
+  { time: "00:30", fullTime: "03-Jul 00:30", price: 3999.88, day: "current" },
+  { time: "00:45", fullTime: "03-Jul 00:45", price: 3809.24, day: "current" },
+  { time: "01:00", fullTime: "03-Jul 01:00", price: 3809.2, day: "current" },
+  { time: "01:15", fullTime: "03-Jul 01:15", price: 3780.58, day: "current" },
+  { time: "01:30", fullTime: "03-Jul 01:30", price: 3499.95, day: "current" },
+  { time: "01:45", fullTime: "03-Jul 01:45", price: 3499.14, day: "current" },
+  { time: "02:00", fullTime: "03-Jul 02:00", price: 3489.75, day: "current" },
+  { time: "02:15", fullTime: "03-Jul 02:15", price: 3349.94, day: "current" },
+  { time: "02:30", fullTime: "03-Jul 02:30", price: 3349.6, day: "current" },
+  { time: "02:45", fullTime: "03-Jul 02:45", price: 3349.55, day: "current" },
+  { time: "03:00", fullTime: "03-Jul 03:00", price: 3349.55, day: "current" },
+  { time: "03:15", fullTime: "03-Jul 03:15", price: 3280.76, day: "current" },
+  { time: "03:30", fullTime: "03-Jul 03:30", price: 3250.82, day: "current" },
+  { time: "03:45", fullTime: "03-Jul 03:45", price: 3250.67, day: "current" },
+  { time: "04:00", fullTime: "03-Jul 04:00", price: 3290.82, day: "current" },
+  { time: "04:15", fullTime: "03-Jul 04:15", price: 3349.57, day: "current" },
+  { time: "04:30", fullTime: "03-Jul 04:30", price: 3396.19, day: "current" },
+  { time: "04:45", fullTime: "03-Jul 04:45", price: 3396.38, day: "current" },
+  { time: "05:00", fullTime: "03-Jul 05:00", price: 3378.07, day: "current" },
+  { time: "05:15", fullTime: "03-Jul 05:15", price: 3404.43, day: "current" },
+  { time: "05:30", fullTime: "03-Jul 05:30", price: 3569.32, day: "current" },
+  { time: "05:45", fullTime: "03-Jul 05:45", price: 3569.16, day: "current" },
+  { time: "06:00", fullTime: "03-Jul 06:00", price: 3700.32, day: "current" },
+  { time: "06:15", fullTime: "03-Jul 06:15", price: 3700.86, day: "current" },
+  { time: "06:30", fullTime: "03-Jul 06:30", price: 3700.08, day: "current" },
+  { time: "06:45", fullTime: "03-Jul 06:45", price: 3488.21, day: "current" },
+  { time: "07:00", fullTime: "03-Jul 07:00", price: 3300.54, day: "current" },
+  { time: "07:15", fullTime: "03-Jul 07:15", price: 3000.63, day: "current" },
+  { time: "07:30", fullTime: "03-Jul 07:30", price: 2950.83, day: "current" },
+  { time: "07:45", fullTime: "03-Jul 07:45", price: 2830.54, day: "current" },
+  { time: "08:00", fullTime: "03-Jul 08:00", price: 2499.3, day: "current" },
+  { time: "08:15", fullTime: "03-Jul 08:15", price: 2499.63, day: "current" },
+  { time: "08:30", fullTime: "03-Jul 08:30", price: 2610.68, day: "current" },
+  { time: "08:45", fullTime: "03-Jul 08:45", price: 2601.45, day: "current" },
+  { time: "09:00", fullTime: "03-Jul 09:00", price: 2435.06, day: "current" },
+  { time: "09:15", fullTime: "03-Jul 09:15", price: 2304.39, day: "current" },
+  { time: "09:30", fullTime: "03-Jul 09:30", price: 2100.55, day: "current" },
+  { time: "09:45", fullTime: "03-Jul 09:45", price: 1864.52, day: "current" },
+  { time: "10:00", fullTime: "03-Jul 10:00", price: 1750.76, day: "current" },
+  { time: "10:15", fullTime: "03-Jul 10:15", price: 1750.72, day: "current" },
+  { time: "10:30", fullTime: "03-Jul 10:30", price: 1807.18, day: "current" },
+  { time: "10:45", fullTime: "03-Jul 10:45", price: 1837.5, day: "current" },
+  { time: "11:00", fullTime: "03-Jul 11:00", price: 2080, day: "current" },
+  { time: "11:15", fullTime: "03-Jul 11:15", price: 2012.57, day: "current" },
+  { time: "11:30", fullTime: "03-Jul 11:30", price: 2080.19, day: "current" },
+  { time: "11:45", fullTime: "03-Jul 11:45", price: 2080.4, day: "current" },
+  { time: "12:00", fullTime: "03-Jul 12:00", price: 1807.94, day: "current" },
+  { time: "12:15", fullTime: "03-Jul 12:15", price: 1865.16, day: "current" },
+  { time: "12:30", fullTime: "03-Jul 12:30", price: 1853.97, day: "current" },
+  { time: "12:45", fullTime: "03-Jul 12:45", price: 1807.89, day: "current" },
+  { time: "13:00", fullTime: "03-Jul 13:00", price: 1736.46, day: "current" },
+  { time: "13:15", fullTime: "03-Jul 13:15", price: 1736.64, day: "current" },
+  { time: "13:30", fullTime: "03-Jul 13:30", price: 1736.04, day: "current" },
+  { time: "13:45", fullTime: "03-Jul 13:45", price: 1750.03, day: "current" },
+  { time: "14:00", fullTime: "03-Jul 14:00", price: 1750.51, day: "current" },
+  { time: "14:15", fullTime: "03-Jul 14:15", price: 1750.73, day: "current" },
+  { time: "14:30", fullTime: "03-Jul 14:30", price: 2000.01, day: "current" },
+  { time: "14:45", fullTime: "03-Jul 14:45", price: 2000.82, day: "current" },
+  { time: "15:00", fullTime: "03-Jul 15:00", price: 2304.27, day: "current" },
+  { time: "15:15", fullTime: "03-Jul 15:15", price: 2273.37, day: "current" },
+  { time: "15:30", fullTime: "03-Jul 15:30", price: 2499.13, day: "current" },
+  { time: "15:45", fullTime: "03-Jul 15:45", price: 2316.52, day: "current" },
+  { time: "16:00", fullTime: "03-Jul 16:00", price: 2099.84, day: "current" },
+  { time: "16:15", fullTime: "03-Jul 16:15", price: 2099.92, day: "current" },
+  { time: "16:30", fullTime: "03-Jul 16:30", price: 2499.53, day: "current" },
+  { time: "16:45", fullTime: "03-Jul 16:45", price: 2610.16, day: "current" },
+  { time: "17:00", fullTime: "03-Jul 17:00", price: 2900.45, day: "current" },
+  { time: "17:15", fullTime: "03-Jul 17:15", price: 2950.35, day: "current" },
+  { time: "17:30", fullTime: "03-Jul 17:30", price: 2950.29, day: "current" },
+  { time: "17:45", fullTime: "03-Jul 17:45", price: 2960.59, day: "current" },
+  { time: "18:00", fullTime: "03-Jul 18:00", price: 3268.51, day: "current" },
+  { time: "18:15", fullTime: "03-Jul 18:15", price: 3396.91, day: "current" },
+  { time: "18:30", fullTime: "03-Jul 18:30", price: 3700.49, day: "current" },
+  { time: "18:45", fullTime: "03-Jul 18:45", price: 4069.17, day: "current" },
+  { time: "19:00", fullTime: "03-Jul 19:00", price: 5000.44, day: "current" },
+  { time: "19:15", fullTime: "03-Jul 19:15", price: 5700.57, day: "current" },
+  { time: "19:30", fullTime: "03-Jul 19:30", price: 6705.92, day: "current" },
+  { time: "19:45", fullTime: "03-Jul 19:45", price: 6308.72, day: "current" },
+  { time: "20:00", fullTime: "03-Jul 20:00", price: 6400.41, day: "current" },
+  { time: "20:15", fullTime: "03-Jul 20:15", price: 6799.24, day: "current" },
+  { time: "20:30", fullTime: "03-Jul 20:30", price: 6799.81, day: "current" },
+  { time: "20:45", fullTime: "03-Jul 20:45", price: 7929.83, day: "current" },
+  { time: "21:00", fullTime: "03-Jul 21:00", price: 6799.84, day: "current" },
+  { time: "21:15", fullTime: "03-Jul 21:15", price: 6999.44, day: "current" },
+  { time: "21:30", fullTime: "03-Jul 21:30", price: 7999.33, day: "current" },
+  { time: "21:45", fullTime: "03-Jul 21:45", price: 7999.15, day: "current" },
+  { time: "22:00", fullTime: "03-Jul 22:00", price: 7999.58, day: "current" },
+  { time: "22:15", fullTime: "03-Jul 22:15", price: 9721.24, day: "current" },
+  { time: "22:30", fullTime: "03-Jul 22:30", price: 9499.91, day: "current" },
+  { time: "22:45", fullTime: "03-Jul 22:45", price: 9799.34, day: "current" },
+  { time: "23:00", fullTime: "03-Jul 23:00", price: 7499.57, day: "current" },
+  { time: "23:15", fullTime: "03-Jul 23:15", price: 6000.92, day: "current" },
+  { time: "23:30", fullTime: "03-Jul 23:30", price: 5899.74, day: "current" },
+  { time: "23:45", fullTime: "03-Jul 23:45", price: 5647.26, day: "current" },
+  
+  // July 4, 2025 - First 6 hours
+  { time: "00:00", fullTime: "04-Jul 00:00", price: 5000.84, day: "next" },
+  { time: "00:15", fullTime: "04-Jul 00:15", price: 4924.65, day: "next" },
+  { time: "00:30", fullTime: "04-Jul 00:30", price: 4672.08, day: "next" },
+  { time: "00:45", fullTime: "04-Jul 00:45", price: 4451.62, day: "next" },
+  { time: "01:00", fullTime: "04-Jul 01:00", price: 4119.99, day: "next" },
+  { time: "01:15", fullTime: "04-Jul 01:15", price: 4119.46, day: "next" },
+  { time: "01:30", fullTime: "04-Jul 01:30", price: 4672.28, day: "next" },
+  { time: "01:45", fullTime: "04-Jul 01:45", price: 4589.45, day: "next" },
+  { time: "02:00", fullTime: "04-Jul 02:00", price: 4499.56, day: "next" },
+  { time: "02:15", fullTime: "04-Jul 02:15", price: 4395.46, day: "next" },
+  { time: "02:30", fullTime: "04-Jul 02:30", price: 4395.41, day: "next" },
+  { time: "02:45", fullTime: "04-Jul 02:45", price: 4395.82, day: "next" },
+  { time: "03:00", fullTime: "04-Jul 03:00", price: 4000.52, day: "next" },
+  { time: "03:15", fullTime: "04-Jul 03:15", price: 3932.32, day: "next" },
+  { time: "03:30", fullTime: "04-Jul 03:30", price: 3893.87, day: "next" },
+  { time: "03:45", fullTime: "04-Jul 03:45", price: 3893.13, day: "next" },
+  { time: "04:00", fullTime: "04-Jul 04:00", price: 4000.08, day: "next" },
+  { time: "04:15", fullTime: "04-Jul 04:15", price: 3889.48, day: "next" },
+  { time: "04:30", fullTime: "04-Jul 04:30", price: 3932.98, day: "next" },
+  { time: "04:45", fullTime: "04-Jul 04:45", price: 3893.64, day: "next" },
+  { time: "05:00", fullTime: "04-Jul 05:00", price: 3905.87, day: "next" },
+  { time: "05:15", fullTime: "04-Jul 05:15", price: 3999.73, day: "next" },
+  { time: "05:30", fullTime: "04-Jul 05:30", price: 4219.73, day: "next" },
+  { time: "05:45", fullTime: "04-Jul 05:45", price: 4480.96, day: "next" }
+];
+
+// Data lookup for each date
+const dataLookup: { [key: string]: any[] } = {
+  "2025-07-01": july1Data36Hours,
+  "2025-07-02": july2Data36Hours,
+  "2025-07-03": july3Data36Hours,
+  // Add more dates as needed
+};
+
 // Calculate statistics only from July 1st data (24 hours)
 const july1OnlyData = july1Data36Hours.filter(item => item.day === "current");
 
 // Calculate statistics only from July 2nd data (24 hours)
 const july2OnlyData = july2Data36Hours.filter(item => item.day === "current");
 
+// Calculate statistics only from July 3rd data (24 hours)
+const july3OnlyData = july3Data36Hours.filter(item => item.day === "current");
+
 const DAMForecastPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 6, 1)); // July 1, 2025
   
-  const currentData = july1Data36Hours; // Always show 36-hour data for July 1st
-  const currentTitle = "July 1, 2025 (36-hour view)";
+  // Get the selected date in the correct format
+  const dateKey = selectedDate.toISOString().split('T')[0];
   
-  // Calculate min/max/avg only from July 1st data (excluding prev/next day data)
-  const july1Prices = july1OnlyData.map(d => d.price);
-  const maxPrice = Math.max(...july1Prices);
-  const minPrice = Math.min(...july1Prices);
-  const avgPrice = july1Prices.reduce((sum, price) => sum + price, 0) / july1Prices.length;
+  // Get current data and title based on selected date
+  const currentData = dataLookup[dateKey] || july1Data36Hours;
+  const currentOnlyData = currentData.filter(item => item.day === "current");
   
-  const maxPricePoint = july1OnlyData.find(d => d.price === maxPrice);
-  const minPricePoint = july1OnlyData.find(d => d.price === minPrice);
+  // Create dynamic title
+  const formatDateForTitle = (date: Date) => {
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
+  };
+  
+  const currentTitle = `${formatDateForTitle(selectedDate)} (36-hour view)`;
+  
+  // Calculate min/max/avg from current day data only (excluding prev/next day data)
+  const currentPrices = currentOnlyData.map(d => d.price);
+  const maxPrice = Math.max(...currentPrices);
+  const minPrice = Math.min(...currentPrices);
+  const avgPrice = currentPrices.reduce((sum, price) => sum + price, 0) / currentPrices.length;
+  
+  const maxPricePoint = currentOnlyData.find(d => d.price === maxPrice);
+  const minPricePoint = currentOnlyData.find(d => d.price === minPrice);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -396,7 +574,7 @@ const DAMForecastPage = () => {
               Day-Ahead Market (DAM) Forecast
             </h1>
             <p className="text-muted-foreground mt-1">
-              36-hour continuous price data (June 30 18:00 - July 2 06:00)
+              36-hour continuous price data with day boundaries
             </p>
           </div>
           
@@ -428,7 +606,8 @@ const DAMForecastPage = () => {
                     const day = date.getDate();
                     const month = date.getMonth();
                     const year = date.getFullYear();
-                    return !(year === 2025 && month === 6 && day === 1);
+                    // Allow July 1-3, 2025
+                    return !(year === 2025 && month === 6 && (day >= 1 && day <= 3));
                   }}
                 />
               </PopoverContent>
@@ -452,7 +631,7 @@ const DAMForecastPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded bg-primary"></div>
-                    <span>July 1st</span>
+                    <span>{formatDateForTitle(selectedDate).split(',')[0]}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded bg-muted-foreground/30"></div>
@@ -481,15 +660,31 @@ const DAMForecastPage = () => {
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
-                        domain={[1000, 6000]}
+                        domain={[1000, 10000]}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       
-                      {/* Day boundary markers */}
-                      <ReferenceLine x="01-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
-                      <ReferenceLine x="02-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                      {/* Day boundary markers - dynamic based on selected date */}
+                      {dateKey === "2025-07-01" && (
+                        <>
+                          <ReferenceLine x="01-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                          <ReferenceLine x="02-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                        </>
+                      )}
+                      {dateKey === "2025-07-02" && (
+                        <>
+                          <ReferenceLine x="02-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                          <ReferenceLine x="03-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                        </>
+                      )}
+                      {dateKey === "2025-07-03" && (
+                        <>
+                          <ReferenceLine x="03-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                          <ReferenceLine x="04-Jul 00:00" stroke="hsl(var(--primary))" strokeDasharray="2 2" />
+                        </>
+                      )}
                       
-                      {/* Average reference line for July 1st only */}
+                      {/* Average reference line for current day only */}
                       <ReferenceLine y={avgPrice} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" />
                       
                       <Line 
@@ -513,9 +708,9 @@ const DAMForecastPage = () => {
             </Card>
           </div>
 
-          {/* Summary Statistics - Based on July 1st data only */}
+          {/* Summary Statistics - Dynamic based on selected date */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold">July 1st Statistics</h3>
+            <h3 className="text-lg font-semibold">{formatDateForTitle(selectedDate).split(',')[0]} Statistics</h3>
             
             <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/10">
               <CardContent className="p-6">
