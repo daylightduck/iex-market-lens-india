@@ -9,64 +9,89 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
-// Generate mock forecast data for a day (96 time slots)
-const generateForecastData = (date: Date) => {
-  const data = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let quarter = 0; quarter < 4; quarter++) {
-      const timeSlot = hour * 4 + quarter;
-      // Generate realistic price patterns (higher during peak hours)
-      let basePrice = 3.5;
-      if (hour >= 6 && hour <= 10) basePrice = 5.2; // Morning peak
-      if (hour >= 18 && hour <= 22) basePrice = 6.8; // Evening peak
-      if (hour >= 23 || hour <= 5) basePrice = 2.1; // Night low
-      
-      const variation = (Math.random() - 0.5) * 2;
-      const price = Math.max(1.5, basePrice + variation);
-      
-      // Generate confidence score (70-95%)
-      const baseConfidence = 85;
-      const confidenceVariation = (Math.random() - 0.5) * 20;
-      const confidence = Math.max(70, Math.min(95, baseConfidence + confidenceVariation));
-      
-      data.push({
-        hour,
-        quarter,
-        timeSlot,
-        price: Number(price.toFixed(2)),
-        confidence: Number(confidence.toFixed(1)),
-        timeRange: `${hour.toString().padStart(2, '0')}:${(quarter * 15).toString().padStart(2, '0')} - ${hour.toString().padStart(2, '0')}:${((quarter + 1) * 15).toString().padStart(2, '0')}`
-      });
-    }
-  }
-  return data;
-};
+// Real data for July 1 and July 2, 2025
+const july1Data = [
+  { time: "18:00", price: 2800 },
+  { time: "19:00", price: 3200 },
+  { time: "20:00", price: 3800 },
+  { time: "21:00", price: 4200 },
+  { time: "22:00", price: 5400 },
+  { time: "23:00", price: 5200 },
+  { time: "00:00", price: 3200 },
+  { time: "01:00", price: 2900 },
+  { time: "02:00", price: 2800 },
+  { time: "03:00", price: 2700 },
+  { time: "04:00", price: 2800 },
+  { time: "05:00", price: 2900 },
+  { time: "06:00", price: 2100 },
+  { time: "07:00", price: 1800 },
+  { time: "08:00", price: 1600 },
+  { time: "09:00", price: 1500 },
+  { time: "10:00", price: 1400 },
+  { time: "11:00", price: 1300 },
+  { time: "12:00", price: 1400 },
+  { time: "13:00", price: 2000 },
+  { time: "14:00", price: 2400 },
+  { time: "15:00", price: 2600 },
+  { time: "16:00", price: 2800 },
+  { time: "17:00", price: 3000 },
+  { time: "18:00", price: 4800 },
+  { time: "19:00", price: 4600 },
+  { time: "20:00", price: 4400 },
+  { time: "21:00", price: 4200 },
+  { time: "22:00", price: 3800 },
+  { time: "23:00", price: 3000 },
+  { time: "00:00", price: 2900 }
+];
+
+const july2Data = [
+  { time: "18:00", price: 2900 },
+  { time: "19:00", price: 3000 },
+  { time: "20:00", price: 4600 },
+  { time: "21:00", price: 4400 },
+  { time: "22:00", price: 4600 },
+  { time: "23:00", price: 4400 },
+  { time: "00:00", price: 2900 },
+  { time: "01:00", price: 2800 },
+  { time: "02:00", price: 2700 },
+  { time: "03:00", price: 2600 },
+  { time: "04:00", price: 2800 },
+  { time: "05:00", price: 3000 },
+  { time: "06:00", price: 2000 },
+  { time: "07:00", price: 1800 },
+  { time: "08:00", price: 1700 },
+  { time: "09:00", price: 1600 },
+  { time: "10:00", price: 1700 },
+  { time: "11:00", price: 1800 },
+  { time: "12:00", price: 1700 },
+  { time: "13:00", price: 2600 },
+  { time: "14:00", price: 2800 },
+  { time: "15:00", price: 2600 },
+  { time: "16:00", price: 2400 },
+  { time: "17:00", price: 2600 },
+  { time: "18:00", price: 5100 },
+  { time: "19:00", price: 5200 },
+  { time: "20:00", price: 4900 },
+  { time: "21:00", price: 4600 },
+  { time: "22:00", price: 4200 },
+  { time: "23:00", price: 3800 },
+  { time: "00:00", price: 3600 }
+];
 
 const DAMForecastPage = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 6, 17)); // July 17, 2025
-  const forecastData = generateForecastData(selectedDate);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 6, 1)); // July 1, 2025
   
-  const maxPrice = Math.max(...forecastData.map(d => d.price));
-  const minPrice = Math.min(...forecastData.map(d => d.price));
-  const avgPrice = forecastData.reduce((sum, d) => sum + d.price, 0) / forecastData.length;
+  const currentData = selectedDate.getDate() === 2 ? july2Data : july1Data;
+  const currentTitle = selectedDate.getDate() === 2 ? "July 2, 2025" : "July 1, 2025";
   
-  const maxPriceSlot = forecastData.find(d => d.price === maxPrice);
-  const minPriceSlot = forecastData.find(d => d.price === minPrice);
-
-  const getPriceColor = (price: number) => {
-    const normalizedPrice = (price - minPrice) / (maxPrice - minPrice);
-    if (normalizedPrice <= 0.33) return "hsl(var(--success))";
-    if (normalizedPrice <= 0.66) return "hsl(var(--warning))";
-    return "hsl(var(--destructive))";
-  };
-
-  const getPriceColorClass = (price: number) => {
-    const normalizedPrice = (price - minPrice) / (maxPrice - minPrice);
-    if (normalizedPrice <= 0.33) return "bg-success/20 border-success/40";
-    if (normalizedPrice <= 0.66) return "bg-warning/20 border-warning/40";
-    return "bg-destructive/20 border-destructive/40";
-  };
+  const maxPrice = Math.max(...currentData.map(d => d.price));
+  const minPrice = Math.min(...currentData.map(d => d.price));
+  const avgPrice = currentData.reduce((sum, d) => sum + d.price, 0) / currentData.length;
+  
+  const maxPricePoint = currentData.find(d => d.price === maxPrice);
+  const minPricePoint = currentData.find(d => d.price === minPrice);
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +133,7 @@ const DAMForecastPage = () => {
               Day-Ahead Market (DAM) Forecast
             </h1>
             <p className="text-muted-foreground mt-1">
-              96 time-slot price predictions for the selected day
+              Historical price data for July 1 & 2, 2025
             </p>
           </div>
           
@@ -136,6 +161,12 @@ const DAMForecastPage = () => {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   className="pointer-events-auto"
+                  disabled={(date) => {
+                    const day = date.getDate();
+                    const month = date.getMonth();
+                    const year = date.getFullYear();
+                    return !(year === 2025 && month === 6 && (day === 1 || day === 2));
+                  }}
                 />
               </PopoverContent>
             </Popover>
@@ -143,81 +174,54 @@ const DAMForecastPage = () => {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Main Heatmap */}
+          {/* Main Chart */}
           <div className="xl:col-span-3">
             <Card className="border-2 border-primary/20 bg-gradient-to-br from-card/50 to-accent/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-primary" />
-                  Projected Heat Map
+                  MCP Price Chart - {currentTitle}
                 </CardTitle>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-success/40"></div>
-                    <span>Low Price</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-warning/40"></div>
-                    <span>Medium Price</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-destructive/40"></div>
-                    <span>High Price</span>
-                  </div>
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {/* Hour labels */}
-                  <div className="grid grid-cols-25 gap-1 text-xs text-muted-foreground">
-                    <div></div> {/* Empty corner */}
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <div key={i} className="text-center font-medium">
-                        {i.toString().padStart(2, '0')}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Heatmap grid */}
-                  {Array.from({ length: 4 }, (_, quarterIndex) => (
-                    <div key={quarterIndex} className="grid grid-cols-25 gap-1">
-                      {/* Quarter label */}
-                      <div className="text-xs text-muted-foreground font-medium flex items-center">
-                        :{(quarterIndex * 15).toString().padStart(2, '0')}
-                      </div>
-                      
-                      {/* Hour cells */}
-                      {Array.from({ length: 24 }, (_, hourIndex) => {
-                        const dataPoint = forecastData.find(
-                          d => d.hour === hourIndex && d.quarter === quarterIndex
-                        );
-                        return (
-                          <div
-                            key={`${hourIndex}-${quarterIndex}`}
-                            className={cn(
-                              "relative h-12 rounded border-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg group",
-                              getPriceColorClass(dataPoint?.price || 0)
-                            )}
-                            title={`${dataPoint?.timeRange} - ₹${dataPoint?.price}/kWh`}
-                          >
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-xs font-semibold text-foreground">
-                                ₹{dataPoint?.price}
-                              </span>
-                            </div>
-                            
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
-                              <div className="text-sm font-medium">{dataPoint?.timeRange}</div>
-                              <div className="text-xs text-muted-foreground">
-                                Confidence: {dataPoint?.confidence}%
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={currentData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="time" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        domain={[1000, 6000]}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "6px",
+                          color: "hsl(var(--popover-foreground))"
+                        }}
+                        formatter={(value: number) => [`₹${value}`, "MCP (Rs/MWh)"]}
+                      />
+                      <ReferenceLine y={2800} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" />
+                      <Line 
+                        type="monotone" 
+                        dataKey="price" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={3}
+                        dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: "hsl(var(--primary))", strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
@@ -232,8 +236,8 @@ const DAMForecastPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Max</p>
-                    <p className="text-2xl font-bold text-destructive">₹{maxPrice.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">at {maxPriceSlot?.timeRange}</p>
+                    <p className="text-2xl font-bold text-destructive">₹{maxPrice}</p>
+                    <p className="text-xs text-muted-foreground">at {maxPricePoint?.time}</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-destructive" />
                 </div>
@@ -245,8 +249,8 @@ const DAMForecastPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Min</p>
-                    <p className="text-2xl font-bold text-success">₹{minPrice.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">at {minPriceSlot?.timeRange}</p>
+                    <p className="text-2xl font-bold text-success">₹{minPrice}</p>
+                    <p className="text-xs text-muted-foreground">at {minPricePoint?.time}</p>
                   </div>
                   <TrendingDown className="h-8 w-8 text-success" />
                 </div>
@@ -258,8 +262,8 @@ const DAMForecastPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Avg</p>
-                    <p className="text-2xl font-bold text-primary">₹{avgPrice.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">per kWh</p>
+                    <p className="text-2xl font-bold text-primary">₹{avgPrice.toFixed(0)}</p>
+                    <p className="text-xs text-muted-foreground">per MWh</p>
                   </div>
                   <BarChart3 className="h-8 w-8 text-primary" />
                 </div>
@@ -269,24 +273,24 @@ const DAMForecastPage = () => {
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-accent/10">
               <CardContent className="p-6">
                 <div className="space-y-3">
-                  <h4 className="font-medium">Confidence Scores</h4>
+                  <h4 className="font-medium">Price Range</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Avg Confidence:</span>
+                      <span>Price Spread:</span>
                       <span className="font-medium">
-                        {(forecastData.reduce((sum, d) => sum + d.confidence, 0) / forecastData.length).toFixed(1)}%
+                        ₹{maxPrice - minPrice}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Min Confidence:</span>
+                      <span>Peak Hours:</span>
                       <span className="font-medium">
-                        {Math.min(...forecastData.map(d => d.confidence)).toFixed(1)}%
+                        18:00 - 22:00
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Max Confidence:</span>
+                      <span>Off-Peak Hours:</span>
                       <span className="font-medium">
-                        {Math.max(...forecastData.map(d => d.confidence)).toFixed(1)}%
+                        10:00 - 17:00
                       </span>
                     </div>
                   </div>
