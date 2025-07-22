@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Map, Battery } from "lucide-react";
+import { TrendingUp, Map, Battery, Cloud } from "lucide-react";
 
 const PageNavigation = () => {
   const location = useLocation();
@@ -21,6 +21,11 @@ const PageNavigation = () => {
       path: "/energy-sources",
       label: "Energy Sources",
       icon: Battery,
+    },
+    {
+      path: "/weather",
+      label: "Weather",
+      icon: Cloud,
     },
   ];
 

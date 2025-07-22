@@ -74,26 +74,6 @@ const EnergySourceCard = ({ title, current, capacity, percentage, trend, icon, c
   );
 };
 
-const WeatherCard = ({ title, value, unit, icon, trend }: any) => {
-  return (
-    <Card className="p-4 bg-card border-border hover:shadow-trading transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-secondary/20 rounded-lg text-secondary">
-            {icon}
-          </div>
-          <div>
-            <h5 className="font-medium text-foreground">{title}</h5>
-            <p className="text-sm text-muted-foreground">{value} {unit}</p>
-          </div>
-        </div>
-        <div className={`text-xs ${trend > 0 ? 'text-bullish' : 'text-bearish'}`}>
-          {trend > 0 ? '+' : ''}{trend}%
-        </div>
-      </div>
-    </Card>
-  );
-};
 
 export const EnergySourceBreakdown = () => {
   // Real data from July 2025 India energy statistics
@@ -146,29 +126,6 @@ export const EnergySourceBreakdown = () => {
     },
   ];
 
-  const weatherFactors = [
-    {
-      title: "Solar Irradiance",
-      value: "901",
-      unit: "W/m²",
-      icon: <Sun className="h-4 w-4" />,
-      trend: 8.2
-    },
-    {
-      title: "Wind Speed",
-      value: "7 km/h",
-      unit: "km/h",
-      icon: <Wind className="h-4 w-4" />,
-      trend: 5.1
-    },
-    {
-      title: "Rainfall",
-      value: "8.7",
-      unit: "mm",
-      icon: <Droplets className="h-4 w-4" />,
-      trend: -2.3
-    },
-  ];
 
   return (
     <div className="space-y-8">
@@ -193,26 +150,6 @@ export const EnergySourceBreakdown = () => {
         </div>
       </div>
 
-      {/* Weather Influencing Factors */}
-      <div>
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold text-foreground mb-2 flex items-center space-x-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <span>Influencing Weather Factors</span>
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Current weather conditions affecting renewable energy generation
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {weatherFactors.map((factor, index) => (
-            <div key={factor.title} className="animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
-              <WeatherCard {...factor} />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

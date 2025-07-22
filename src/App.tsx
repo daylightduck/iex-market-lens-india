@@ -9,6 +9,7 @@ import EnergySourcesPage from "./pages/EnergySourcesPage";
 import RegionalMarketPage from "./pages/RegionalMarketPage";
 import DAMForecastPage from "./pages/DAMForecastPage";
 import GDAMForecastPage from "./pages/GDAMForecastPage";
+import WeatherPage from "./pages/WeatherPage";
 import NotFound from "./pages/NotFound";
 import Map from "./pages/Map";
 
@@ -25,9 +26,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/energy-sources" element={<EnergySourcesPage />} />
             <Route path="/regional-market" element={<RegionalMarketPage />} />
-        <Route path="/dam-forecast" element={<DAMForecastPage />} />
-        <Route path="/gdam-forecast" element={<GDAMForecastPage />} />
-        <Route path="/temp" element={<Map />} />
+            <Route path="/dam-forecast" element={<DAMForecastPage />} />
+            <Route path="/gdam-forecast" element={<GDAMForecastPage />} />
+            <Route path="/weather" element={<WeatherPage />} />
+            <Route path="/temp" element={<Map />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
