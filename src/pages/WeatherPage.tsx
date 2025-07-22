@@ -1,11 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Cloud, Clock, Search, MapPin, Thermometer, Eye, Wind, Droplets } from "lucide-react";
+import {
+  ArrowLeft,
+  Cloud,
+  Clock,
+  Search,
+  MapPin,
+  Thermometer,
+  Eye,
+  Wind,
+  Droplets,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
+
+// OpenWeatherMap API configuration
+const OPENWEATHER_API_KEY = "0e2bee11b747994db8a18e35ebd3f599";
 
 interface WeatherData {
   name: string;
@@ -19,31 +32,171 @@ interface WeatherData {
   icon: string;
 }
 
+interface LocationSuggestion {
+  name: string;
+  country: string;
+  state?: string;
+  lat: number;
+  lon: number;
+}
+
 const WeatherPage = () => {
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const fetchWeather = async () => {
-    if (!city.trim()) return;
-    
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced search for city suggestions
+  const searchCitySuggestions = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setSearchLoading(true);
+
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+          query
+        )}&limit=5&appid=${OPENWEATHER_API_KEY}`
+      );
+
+      if (response.ok) {
+        const data: LocationSuggestion[] = await response.json();
+        setSuggestions(data);
+        setShowSuggestions(data.length > 0);
+      } else {
+        console.error(
+          "Geocoding API error:",
+          response.status,
+          response.statusText
+        );
+        // Don't show error to user for failed suggestions, just hide them
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (err) {
+      console.error("Failed to fetch city suggestions:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle input change with debouncing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCity(value);
+    setSelectedIndex(-1); // Reset selection when typing
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchCitySuggestions(value);
+    }, 300);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+          handleSuggestionSelect(suggestions[selectedIndex]);
+        } else {
+          // If no selection, use the regular form submit
+          fetchWeather();
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        inputRef.current?.blur();
+        break;
+    }
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: LocationSuggestion) => {
+    const displayName = suggestion.state
+      ? `${suggestion.name}, ${suggestion.state}, ${suggestion.country}`
+      : `${suggestion.name}, ${suggestion.country}`;
+
+    setCity(displayName);
+    setShowSuggestions(false);
+    setSuggestions([]);
+
+    // Automatically fetch weather for selected location
+    fetchWeatherByCoordinates(suggestion.lat, suggestion.lon, displayName);
+  };
+
+  const fetchWeatherByCoordinates = async (
+    lat: number,
+    lon: number,
+    displayName: string
+  ) => {
     setLoading(true);
     setError("");
-    
+
     try {
-      // Using OpenWeatherMap API
-      const API_KEY = "your_api_key_here"; // This would need to be set up properly
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
       );
-      
+
       if (!response.ok) {
-        throw new Error("City not found");
+        throw new Error("Failed to fetch weather data");
       }
-      
+
       const data = await response.json();
-      
+
       setWeatherData({
         name: data.name,
         country: data.sys.country,
@@ -56,7 +209,52 @@ const WeatherPage = () => {
         icon: data.weather[0].icon,
       });
     } catch (err) {
-      setError("Failed to fetch weather data. Please check the city name and try again.");
+      setError("Failed to fetch weather data. Please try again.");
+      setWeatherData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWeather = async () => {
+    if (!city.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Using OpenWeatherMap API
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+          city
+        )}&appid=${OPENWEATHER_API_KEY}&units=metric`
+      );
+
+      if (!response.ok) {
+        throw new Error("City not found");
+      }
+
+      const data = await response.json();
+
+      setWeatherData({
+        name: data.name,
+        country: data.sys.country,
+        temp: Math.round(data.main.temp),
+        feels_like: Math.round(data.main.feels_like),
+        humidity: data.main.humidity,
+        visibility: Math.round(data.visibility / 1000),
+        wind_speed: data.wind.speed,
+        description: data.weather[0].description,
+        icon: data.weather[0].icon,
+      });
+
+      // Hide suggestions after successful search
+      setShowSuggestions(false);
+      setSuggestions([]);
+    } catch (err) {
+      setError(
+        "Failed to fetch weather data. Please check the city name and try again."
+      );
       setWeatherData(null);
     } finally {
       setLoading(false);
@@ -89,24 +287,27 @@ const WeatherPage = () => {
                   <h1 className="text-2xl font-bold text-foreground">
                     Weather Monitor
                   </h1>
-                  <p className="text-sm text-muted-foreground">Current weather conditions</p>
+                  <p className="text-sm text-muted-foreground">
+                    Current weather conditions
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <PageNavigation />
-              
+
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  {new Date().toLocaleString('en-IN', {
-                    timeZone: 'Asia/Kolkata',
+                  {new Date().toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata",
                     hour12: true,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                  })} IST
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}{" "}
+                  IST
                 </span>
               </div>
 
@@ -121,26 +322,75 @@ const WeatherPage = () => {
         {/* Search Section */}
         <Card className="p-6 bg-card border-border mb-8">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Search Weather</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Search Weather
+            </h2>
             <p className="text-sm text-muted-foreground">
               Enter a city or state name to get current weather information
             </p>
           </div>
-          
-          <form onSubmit={handleSubmit} className="flex gap-4 max-w-md">
-            <Input
-              type="text"
-              placeholder="Enter city or state name..."
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={loading} className="gap-2">
-              <Search className="h-4 w-4" />
-              {loading ? "Searching..." : "Search"}
-            </Button>
+
+          <form onSubmit={handleSubmit} className="relative max-w-md">
+            <div className="flex gap-4">
+              <div className="relative flex-1" ref={dropdownRef}>
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Enter city or state name..."
+                  value={city}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  className="pr-10"
+                  onFocus={() => {
+                    if (suggestions.length > 0) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                />
+                {searchLoading && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+
+                {/* Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <Card className="absolute z-50 w-full mt-1 bg-card border-border shadow-lg max-h-60 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => (
+                      <div
+                        key={`${suggestion.name}-${suggestion.country}-${index}`}
+                        className={`px-4 py-3 cursor-pointer border-b border-border last:border-b-0 transition-colors ${
+                          index === selectedIndex
+                            ? "bg-primary/10 border-primary/20"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => handleSuggestionSelect(suggestion)}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {suggestion.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {suggestion.state ? `${suggestion.state}, ` : ""}
+                              {suggestion.country}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+                )}
+              </div>
+              <Button type="submit" disabled={loading} className="gap-2">
+                <Search className="h-4 w-4" />
+                {loading ? "Searching..." : "Search"}
+              </Button>
+            </div>
           </form>
-          
+
           {error && (
             <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-sm text-destructive">{error}</p>
@@ -172,7 +422,9 @@ const WeatherPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Temperature</p>
-                    <p className="text-2xl font-bold text-foreground">{weatherData.temp}°C</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {weatherData.temp}°C
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       Feels like {weatherData.feels_like}°C
                     </p>
@@ -188,7 +440,9 @@ const WeatherPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Humidity</p>
-                    <p className="text-2xl font-bold text-foreground">{weatherData.humidity}%</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {weatherData.humidity}%
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -201,7 +455,9 @@ const WeatherPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Wind Speed</p>
-                    <p className="text-2xl font-bold text-foreground">{weatherData.wind_speed} m/s</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {weatherData.wind_speed} m/s
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -214,7 +470,9 @@ const WeatherPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Visibility</p>
-                    <p className="text-2xl font-bold text-foreground">{weatherData.visibility} km</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {weatherData.visibility} km
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -231,7 +489,9 @@ const WeatherPage = () => {
               © 2024 Indian Energy Exchange Weather Monitor.
             </div>
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-              <span>Last Updated: {new Date().toLocaleTimeString('en-IN')}</span>
+              <span>
+                Last Updated: {new Date().toLocaleTimeString("en-IN")}
+              </span>
               <span>•</span>
               <span className="text-bullish">Live Data</span>
             </div>
