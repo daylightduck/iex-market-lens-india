@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Sun, Wind, Droplets, Flame, Battery, Zap } from "lucide-react";
+import { Sun, Wind, Droplets, Flame, Battery, Zap, Atom } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface EnergySourceCardProps {
@@ -33,22 +33,22 @@ const EnergySourceCard = ({ title, current, capacity, percentage, trend, icon, c
 
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Current Output:</span>
-          <span className="font-medium text-foreground">{current} GW</span>
+          <span className="text-muted-foreground">Daily Generation:</span>
+          <span className="font-medium text-foreground">{current.toLocaleString('en-IN')} GWH</span>
         </div>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Installed Capacity:</span>
-          <span className="font-medium text-foreground">{capacity} GW</span>
+          <span className="font-medium text-foreground">{capacity.toLocaleString('en-IN')} MW</span>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Utilization</span>
-            <span className="text-muted-foreground">{Math.round((current / capacity) * 100)}%</span>
+            <span className="text-muted-foreground">Daily Generation %</span>
+            <span className="text-muted-foreground">{percentage.toFixed(2)}%</span>
           </div>
           <Progress 
-            value={(current / capacity) * 100} 
+            value={Math.min(percentage * 10, 100)} 
             className="h-2"
           />
         </div>
@@ -96,42 +96,53 @@ const WeatherCard = ({ title, value, unit, icon, trend }: any) => {
 };
 
 export const EnergySourceBreakdown = () => {
+  // Real data from July 2025 India energy statistics
+  // Percentages calculated as: (Daily Generation / Monthly Capacity) * 100
   const energySources = [
     {
-      title: "Solar Power",
-      current: 2.8,
-      capacity: 8.2,
-      percentage: 12.5,
-      trend: "up" as const,
-      icon: <Sun className="h-5 w-5" />,
-      color: "bg-warning/20 text-warning",
-    },
-    {
-      title: "Wind Power",
-      current: 1.9,
-      capacity: 6.1,
-      percentage: 8.7,
-      trend: "up" as const,
-      icon: <Wind className="h-5 w-5" />,
-      color: "bg-secondary/20 text-secondary",
+      title: "Nuclear Power",
+      current: 140.67, // GWH daily generation
+      capacity: 8780, // MW installed capacity
+      percentage: (140.67 / 8780) * 100, // 1.60%
+      trend: "stable" as const,
+      icon: <Atom className="h-5 w-5" />,
+      color: "bg-bearish/20 text-bearish",
     },
     {
       title: "Hydro Power",
-      current: 3.2,
-      capacity: 4.8,
-      percentage: 14.8,
+      current: 739.41, // GWH daily generation
+      capacity: 49628.16, // MW installed capacity
+      percentage: (739.41 / 49628.16) * 100, // 1.49%
       trend: "stable" as const,
       icon: <Droplets className="h-5 w-5" />,
       color: "bg-primary/20 text-primary",
     },
     {
       title: "Thermal Power",
-      current: 5.8,
-      capacity: 12.4,
-      percentage: 26.9,
+      current: 3677.28, // GWH daily generation
+      capacity: 242389.63, // MW installed capacity
+      percentage: (3677.28 / 242389.63) * 100, // 1.52%
       trend: "down" as const,
       icon: <Flame className="h-5 w-5" />,
-      color: "bg-bearish/20 text-bearish",
+      color: "bg-warning/20 text-warning",
+    },
+    {
+      title: "RES (Renewable)",
+      current: 0, // No generation data available
+      capacity: 184621.03, // MW installed capacity
+      percentage: 0, // No data available
+      trend: "up" as const,
+      icon: <Sun className="h-5 w-5" />,
+      color: "bg-bullish/20 text-bullish",
+    },
+    {
+      title: "Bhutan Import",
+      current: 38.24, // GWH daily import
+      capacity: 38.24, // Treating import as capacity for display
+      percentage: 100, // Showing as 100% since it's an import
+      trend: "stable" as const,
+      icon: <Zap className="h-5 w-5" />,
+      color: "bg-secondary/20 text-secondary",
     },
   ];
 
@@ -169,11 +180,11 @@ export const EnergySourceBreakdown = () => {
             <span>Energy Source Breakdown</span>
           </h3>
           <p className="text-sm text-muted-foreground">
-            Current generation and capacity utilization across different energy sources
+            Daily generation data for July 19, 2025 across India's energy sources
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {energySources.map((source, index) => (
             <div key={source.title} className="animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
               <EnergySourceCard {...source} />
