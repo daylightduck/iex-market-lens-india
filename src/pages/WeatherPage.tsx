@@ -21,6 +21,64 @@ import PageNavigation from "@/components/PageNavigation";
 // OpenWeatherMap API configuration
 const OPENWEATHER_API_KEY = "0e2bee11b747994db8a18e35ebd3f599";
 
+// Cache configuration
+const CACHE_EXPIRY_MINUTES = 15;
+const CACHE_KEY_PREFIX = "weather_cache_";
+const ALL_STATES_CACHE_KEY = "all_states_weather_data";
+
+// Cache utility functions
+const getCacheKey = (location: string) => `${CACHE_KEY_PREFIX}${location}`;
+
+const isValidCache = (timestamp: number) => {
+  const now = Date.now();
+  const expiryTime = CACHE_EXPIRY_MINUTES * 60 * 1000; // 15 minutes in milliseconds
+  return now - timestamp < expiryTime;
+};
+
+const getCachedData = (key: string) => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (isValidCache(timestamp)) {
+        return data;
+      } else {
+        // Remove expired cache
+        localStorage.removeItem(key);
+      }
+    }
+  } catch (error) {
+    console.error("Error reading from cache:", error);
+  }
+  return null;
+};
+
+const setCachedData = (key: string, data: unknown) => {
+  try {
+    const cacheObject = {
+      data,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify(cacheObject));
+  } catch (error) {
+    console.error("Error writing to cache:", error);
+  }
+};
+
+const clearAllCache = () => {
+  try {
+    // Clear all weather cache entries
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(CACHE_KEY_PREFIX) || key === ALL_STATES_CACHE_KEY) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log("Weather cache cleared");
+  } catch (error) {
+    console.error("Error clearing cache:", error);
+  }
+};
+
 // Indian states mapping for the map library
 const INDIAN_STATES = [
   "Andaman & Nicobar Island",
@@ -217,6 +275,7 @@ const WeatherPage = () => {
   const [loadingMessage, setLoadingMessage] = useState(
     "Initializing weather data..."
   );
+  const [isDataFromCache, setIsDataFromCache] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -226,12 +285,29 @@ const WeatherPage = () => {
     const loadAllStatesWeatherData = async () => {
       setInitialLoading(true);
       setLoadingProgress(0);
-      setLoadingMessage("Fetching weather data for all Indian states...");
+      setLoadingMessage("Checking cached weather data...");
+
+      // Check if we have cached data for all states
+      const cachedAllStatesData = getCachedData(ALL_STATES_CACHE_KEY);
+      if (cachedAllStatesData) {
+        setLoadingMessage("Loading cached weather data...");
+        setStateWeatherData(cachedAllStatesData);
+        setIsDataFromCache(true);
+        setLoadingProgress(100);
+        setLoadingMessage("Weather data loaded from cache!");
+        setTimeout(() => {
+          setInitialLoading(false);
+        }, 500);
+        return;
+      }
+
+      setLoadingMessage("Fetching fresh weather data for all Indian states...");
 
       // Get all states with their capitals
       const stateCapitalPairs = Object.entries(STATE_CAPITALS);
       const totalStates = stateCapitalPairs.length;
       let completedStates = 0;
+      const newStateWeatherData: StateWeatherData = {};
 
       // Process states in batches to avoid overwhelming the API
       const batchSize = 5; // Process 5 states at a time
@@ -244,36 +320,44 @@ const WeatherPage = () => {
             try {
               setLoadingMessage(`Loading weather for ${stateName}...`);
 
-              // First, get coordinates for the state capital
-              const geoResponse = await fetch(
-                `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
-                  `${capitalName}, ${stateName}, India`
-                )}&limit=1&appid=${OPENWEATHER_API_KEY}`
-              );
+              // Check individual state cache first
+              const cacheKey = getCacheKey(`${stateName}_${capitalName}`);
+              const cachedStateData = getCachedData(cacheKey);
 
-              if (geoResponse.ok) {
-                const geoData = await geoResponse.json();
-                if (geoData.length > 0) {
-                  const location = geoData[0];
+              if (cachedStateData) {
+                newStateWeatherData[stateName] = cachedStateData;
+              } else {
+                // First, get coordinates for the state capital
+                const geoResponse = await fetch(
+                  `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+                    `${capitalName}, ${stateName}, India`
+                  )}&limit=1&appid=${OPENWEATHER_API_KEY}`
+                );
 
-                  // Get weather data using coordinates
-                  const weatherResponse = await fetch(
-                    `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
-                  );
+                if (geoResponse.ok) {
+                  const geoData = await geoResponse.json();
+                  if (geoData.length > 0) {
+                    const location = geoData[0];
 
-                  if (weatherResponse.ok) {
-                    const weatherData = await weatherResponse.json();
+                    // Get weather data using coordinates
+                    const weatherResponse = await fetch(
+                      `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
+                    );
 
-                    // Update state weather data
-                    setStateWeatherData((prev) => ({
-                      ...prev,
-                      [stateName]: {
+                    if (weatherResponse.ok) {
+                      const weatherData = await weatherResponse.json();
+
+                      const stateWeather = {
                         temp: Math.round(weatherData.main.temp),
                         description: weatherData.weather[0].description,
                         humidity: weatherData.main.humidity,
                         windSpeed: weatherData.wind.speed,
-                      },
-                    }));
+                      };
+
+                      // Cache individual state data
+                      setCachedData(cacheKey, stateWeather);
+                      newStateWeatherData[stateName] = stateWeather;
+                    }
                   }
                 }
               }
@@ -292,6 +376,11 @@ const WeatherPage = () => {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
+
+      // Cache all states data
+      setCachedData(ALL_STATES_CACHE_KEY, newStateWeatherData);
+      setStateWeatherData(newStateWeatherData);
+      setIsDataFromCache(false);
 
       setLoadingMessage("Weather data loaded successfully!");
       setTimeout(() => {
@@ -333,20 +422,37 @@ const WeatherPage = () => {
     lon: number
   ) => {
     try {
+      // Check cache first
+      const cacheKey = getCacheKey(`${stateName}_coords_${lat}_${lon}`);
+      const cachedData = getCachedData(cacheKey);
+
+      if (cachedData) {
+        setStateWeatherData((prev) => ({
+          ...prev,
+          [stateName]: cachedData,
+        }));
+        return;
+      }
+
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
       );
 
       if (response.ok) {
         const data = await response.json();
+        const weatherData = {
+          temp: Math.round(data.main.temp),
+          description: data.weather[0].description,
+          humidity: data.main.humidity,
+          windSpeed: data.wind.speed,
+        };
+
+        // Cache the data
+        setCachedData(cacheKey, weatherData);
+
         setStateWeatherData((prev) => ({
           ...prev,
-          [stateName]: {
-            temp: Math.round(data.main.temp),
-            description: data.weather[0].description,
-            humidity: data.main.humidity,
-            windSpeed: data.wind.speed,
-          },
+          [stateName]: weatherData,
         }));
       }
     } catch (err) {
@@ -557,6 +663,19 @@ const WeatherPage = () => {
     setError("");
 
     try {
+      // Check cache first
+      const cacheKey = getCacheKey(`coords_${lat}_${lon}`);
+      const cachedData = getCachedData(cacheKey);
+
+      if (cachedData) {
+        setWeatherData({
+          ...cachedData,
+          name: displayName, // Use the provided display name
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
       );
@@ -567,7 +686,7 @@ const WeatherPage = () => {
 
       const data = await response.json();
 
-      setWeatherData({
+      const weatherData = {
         name: displayName, // Use the provided display name instead of API response name
         country: data.sys.country,
         temp: Math.round(data.main.temp),
@@ -577,7 +696,16 @@ const WeatherPage = () => {
         wind_speed: data.wind.speed,
         description: data.weather[0].description,
         icon: data.weather[0].icon,
-      });
+      };
+
+      // Cache the data (without the custom display name for reusability)
+      const cacheableData = {
+        ...weatherData,
+        name: data.name, // Store original name for cache reusability
+      };
+      setCachedData(cacheKey, cacheableData);
+
+      setWeatherData(weatherData);
     } catch (err) {
       setError("Failed to fetch weather data. Please try again.");
       setWeatherData(null);
@@ -593,6 +721,37 @@ const WeatherPage = () => {
     setError("");
 
     try {
+      // Check cache first
+      const cacheKey = getCacheKey(`city_${city.toLowerCase()}`);
+      const cachedData = getCachedData(cacheKey);
+
+      if (cachedData) {
+        setWeatherData(cachedData);
+
+        // If it's an Indian location, try to highlight the corresponding state
+        if (cachedData.country === "IN") {
+          const matchingState = findMatchingIndianState(cachedData.name, "IN");
+          if (matchingState) {
+            setHighlightedState(matchingState);
+            // Update state weather data from cache if available
+            const stateCacheKey = getCacheKey(`${matchingState}_state`);
+            const cachedStateData = getCachedData(stateCacheKey);
+            if (cachedStateData) {
+              setStateWeatherData((prev) => ({
+                ...prev,
+                [matchingState]: cachedStateData,
+              }));
+            }
+          }
+        }
+
+        // Hide suggestions after successful cache hit
+        setShowSuggestions(false);
+        setSuggestions([]);
+        setLoading(false);
+        return;
+      }
+
       // Using OpenWeatherMap API
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
@@ -606,7 +765,7 @@ const WeatherPage = () => {
 
       const data = await response.json();
 
-      setWeatherData({
+      const weatherData = {
         name: data.name,
         country: data.sys.country,
         temp: Math.round(data.main.temp),
@@ -616,7 +775,11 @@ const WeatherPage = () => {
         wind_speed: data.wind.speed,
         description: data.weather[0].description,
         icon: data.weather[0].icon,
-      });
+      };
+
+      // Cache the data
+      setCachedData(cacheKey, weatherData);
+      setWeatherData(weatherData);
 
       // If it's an Indian location, try to highlight the corresponding state
       if (data.sys.country === "IN") {
@@ -624,14 +787,20 @@ const WeatherPage = () => {
         if (matchingState) {
           setHighlightedState(matchingState);
           // Update state weather data
+          const stateWeatherData = {
+            temp: Math.round(data.main.temp),
+            description: data.weather[0].description,
+            humidity: data.main.humidity,
+            windSpeed: data.wind.speed,
+          };
+
+          // Cache state data
+          const stateCacheKey = getCacheKey(`${matchingState}_state`);
+          setCachedData(stateCacheKey, stateWeatherData);
+
           setStateWeatherData((prev) => ({
             ...prev,
-            [matchingState]: {
-              temp: Math.round(data.main.temp),
-              description: data.weather[0].description,
-              humidity: data.main.humidity,
-              windSpeed: data.wind.speed,
-            },
+            [matchingState]: stateWeatherData,
           }));
         }
       }
@@ -647,6 +816,13 @@ const WeatherPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefreshData = () => {
+    clearAllCache();
+    setIsDataFromCache(false);
+    // Reload the page to fetch fresh data
+    window.location.reload();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -739,6 +915,24 @@ const WeatherPage = () => {
 
             <div className="flex items-center space-x-4">
               <PageNavigation />
+
+              {/* Cache Status Indicator */}
+              {isDataFromCache && (
+                <div className="flex items-center space-x-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/20">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-primary">
+                    Cached Data (15min)
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefreshData}
+                    className="h-6 px-2 text-xs text-primary hover:bg-primary/20"
+                  >
+                    Refresh
+                  </Button>
+                </div>
+              )}
 
               <ThemeToggle />
             </div>
