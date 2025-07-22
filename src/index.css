@@ -126,3 +126,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom styles for ReactDatamaps */
+@layer components {
+  /* Fix India map positioning and sizing */
+  .react-datamaps svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 500px !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Ensure map container is properly sized */
+  .react-datamaps {
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  
+  /* Fix any overflow issues */
+  .react-datamaps * {
+    box-sizing: border-box !important;
+  }
+}

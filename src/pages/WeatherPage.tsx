@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import ReactDatamaps from "react-india-states-map";
 import {
   ArrowLeft,
   Cloud,
@@ -12,13 +13,157 @@ import {
   Droplets,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
 
 // OpenWeatherMap API configuration
 const OPENWEATHER_API_KEY = "0e2bee11b747994db8a18e35ebd3f599";
+
+// Indian states mapping for the map library
+const INDIAN_STATES = [
+  "Andaman & Nicobar Island",
+  "Andhra Pradesh",
+  "Arunanchal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadara & Nagar Haveli",
+  "Daman & Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu & Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
+// Function to get temperature-based color
+const getTemperatureColor = (
+  temp: number | null,
+  isHighlighted: boolean = false
+) => {
+  if (temp === null) return isHighlighted ? "#94A3B8" : "#E5E7EB"; // Gray for no data
+
+  if (isHighlighted) {
+    // Brighter colors for highlighted state
+    if (temp <= 10) return "#1E40AF"; // Dark blue
+    if (temp <= 20) return "#3B82F6"; // Blue
+    if (temp <= 30) return "#10B981"; // Green
+    if (temp <= 35) return "#F59E0B"; // Orange
+    return "#DC2626"; // Red
+  } else {
+    // Muted colors for normal states
+    if (temp <= 10) return "#DBEAFE"; // Light blue
+    if (temp <= 20) return "#BFDBFE"; // Light blue
+    if (temp <= 30) return "#D1FAE5"; // Light green
+    if (temp <= 35) return "#FED7AA"; // Light orange
+    return "#FECACA"; // Light red
+  }
+};
+
+// Function to normalize state names for comparison
+const normalizeStateName = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/state$/, "")
+    .replace(/pradesh$/, "pradesh")
+    .replace(/^west\s+/, "west ");
+};
+
+// Function to find matching Indian state for search results
+const findMatchingIndianState = (searchName: string, country: string) => {
+  if (country !== "IN") return null;
+
+  const normalizedSearch = normalizeStateName(searchName);
+
+  return INDIAN_STATES.find((state) => {
+    const normalizedState = normalizeStateName(state);
+    return (
+      normalizedState === normalizedSearch ||
+      normalizedState.includes(normalizedSearch) ||
+      normalizedSearch.includes(normalizedState) ||
+      // Handle common name variations
+      (normalizedSearch === "mumbai" &&
+        normalizedState.includes("maharashtra")) ||
+      (normalizedSearch === "bangalore" &&
+        normalizedState.includes("karnataka")) ||
+      (normalizedSearch === "chennai" &&
+        normalizedState.includes("tamil nadu")) ||
+      (normalizedSearch === "kolkata" &&
+        normalizedState.includes("west bengal")) ||
+      (normalizedSearch === "hyderabad" &&
+        normalizedState.includes("telangana")) ||
+      (normalizedSearch === "pune" && normalizedState.includes("maharashtra"))
+    );
+  });
+};
+
+// State capital mapping for better geocoding results
+const STATE_CAPITALS = {
+  "Andhra Pradesh": "Amaravati",
+  "Arunachal Pradesh": "Itanagar",
+  Assam: "Guwahati",
+  Bihar: "Patna",
+  Chhattisgarh: "Raipur",
+  Goa: "Panaji",
+  Gujarat: "Gandhinagar",
+  Haryana: "Chandigarh",
+  "Himachal Pradesh": "Shimla",
+  Jharkhand: "Ranchi",
+  Karnataka: "Bangalore",
+  Kerala: "Thiruvananthapuram",
+  "Madhya Pradesh": "Bhopal",
+  Maharashtra: "Mumbai",
+  Manipur: "Imphal",
+  Meghalaya: "Shillong",
+  Mizoram: "Aizawl",
+  Nagaland: "Kohima",
+  Odisha: "Bhubaneswar",
+  Punjab: "Chandigarh",
+  Rajasthan: "Jaipur",
+  Sikkim: "Gangtok",
+  "Tamil Nadu": "Chennai",
+  Telangana: "Hyderabad",
+  Tripura: "Agartala",
+  "Uttar Pradesh": "Lucknow",
+  Uttarakhand: "Dehradun",
+  "West Bengal": "Kolkata",
+  Delhi: "New Delhi",
+  "Jammu & Kashmir": "Srinagar",
+  Chandigarh: "Chandigarh",
+  "Dadara & Nagar Haveli": "Silvassa",
+  "Daman & Diu": "Daman",
+  Lakshadweep: "Kavaratti",
+  Puducherry: "Puducherry",
+  "Andaman & Nicobar Island": "Port Blair",
+};
 
 interface WeatherData {
   name: string;
@@ -40,6 +185,15 @@ interface LocationSuggestion {
   lon: number;
 }
 
+interface StateWeatherData {
+  [stateName: string]: {
+    temp: number;
+    description: string;
+    humidity: number;
+    windSpeed: number;
+  };
+}
+
 const WeatherPage = () => {
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -49,9 +203,104 @@ const WeatherPage = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [highlightedState, setHighlightedState] = useState<string | null>(null);
+  const [selectedStateName, setSelectedStateName] = useState<string | null>(
+    null
+  );
+  const [stateWeatherData, setStateWeatherData] = useState<StateWeatherData>(
+    {}
+  );
+  const [mapLoading, setMapLoading] = useState(false);
+  const [hoveredState, setHoveredState] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState(
+    "Initializing weather data..."
+  );
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load weather data for all Indian states on page load
+  useEffect(() => {
+    const loadAllStatesWeatherData = async () => {
+      setInitialLoading(true);
+      setLoadingProgress(0);
+      setLoadingMessage("Fetching weather data for all Indian states...");
+
+      // Get all states with their capitals
+      const stateCapitalPairs = Object.entries(STATE_CAPITALS);
+      const totalStates = stateCapitalPairs.length;
+      let completedStates = 0;
+
+      // Process states in batches to avoid overwhelming the API
+      const batchSize = 5; // Process 5 states at a time
+      for (let i = 0; i < stateCapitalPairs.length; i += batchSize) {
+        const batch = stateCapitalPairs.slice(i, i + batchSize);
+
+        // Process current batch
+        await Promise.all(
+          batch.map(async ([stateName, capitalName]) => {
+            try {
+              setLoadingMessage(`Loading weather for ${stateName}...`);
+
+              // First, get coordinates for the state capital
+              const geoResponse = await fetch(
+                `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+                  `${capitalName}, ${stateName}, India`
+                )}&limit=1&appid=${OPENWEATHER_API_KEY}`
+              );
+
+              if (geoResponse.ok) {
+                const geoData = await geoResponse.json();
+                if (geoData.length > 0) {
+                  const location = geoData[0];
+
+                  // Get weather data using coordinates
+                  const weatherResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
+                  );
+
+                  if (weatherResponse.ok) {
+                    const weatherData = await weatherResponse.json();
+
+                    // Update state weather data
+                    setStateWeatherData((prev) => ({
+                      ...prev,
+                      [stateName]: {
+                        temp: Math.round(weatherData.main.temp),
+                        description: weatherData.weather[0].description,
+                        humidity: weatherData.main.humidity,
+                        windSpeed: weatherData.wind.speed,
+                      },
+                    }));
+                  }
+                }
+              }
+            } catch (err) {
+              console.error(`Failed to fetch weather for ${stateName}:`, err);
+            }
+
+            completedStates++;
+            const progress = Math.round((completedStates / totalStates) * 100);
+            setLoadingProgress(progress);
+          })
+        );
+
+        // Small delay between batches to respect API rate limits
+        if (i + batchSize < stateCapitalPairs.length) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
+
+      setLoadingMessage("Weather data loaded successfully!");
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
+    };
+
+    loadAllStatesWeatherData();
+  }, []);
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
@@ -76,6 +325,34 @@ const WeatherPage = () => {
       }
     };
   }, []);
+
+  // Fetch weather data for a specific state
+  const fetchStateWeather = async (
+    stateName: string,
+    lat: number,
+    lon: number
+  ) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setStateWeatherData((prev) => ({
+          ...prev,
+          [stateName]: {
+            temp: Math.round(data.main.temp),
+            description: data.weather[0].description,
+            humidity: data.main.humidity,
+            windSpeed: data.wind.speed,
+          },
+        }));
+      }
+    } catch (err) {
+      console.error(`Failed to fetch weather for ${stateName}:`, err);
+    }
+  };
 
   // Debounced search for city suggestions
   const searchCitySuggestions = async (query: string) => {
@@ -174,8 +451,101 @@ const WeatherPage = () => {
     setShowSuggestions(false);
     setSuggestions([]);
 
+    // Find and highlight the matching Indian state
+    if (suggestion.country === "IN") {
+      const matchingState =
+        findMatchingIndianState(suggestion.name, suggestion.country) ||
+        findMatchingIndianState(suggestion.state || "", suggestion.country);
+
+      if (matchingState) {
+        setHighlightedState(matchingState);
+        // Fetch weather data for the highlighted state
+        fetchStateWeather(matchingState, suggestion.lat, suggestion.lon);
+      }
+    }
+
     // Automatically fetch weather for selected location
     fetchWeatherByCoordinates(suggestion.lat, suggestion.lon, displayName);
+  };
+
+  // Create the region data for the map
+  const createMapData = () => {
+    const mapData: {
+      [key: string]: { value: number; color: string; hoverColor?: string };
+    } = {};
+
+    INDIAN_STATES.forEach((state) => {
+      const weatherData = stateWeatherData[state];
+      const temp = weatherData?.temp || null;
+      const isHighlighted = state === highlightedState;
+
+      mapData[state] = {
+        value: temp || 0,
+        color: getTemperatureColor(temp, isHighlighted),
+        hoverColor: isHighlighted ? getTemperatureColor(temp, true) : "#6366F1",
+      };
+    });
+
+    return mapData;
+  };
+
+  // Handle state click on map
+  const handleStateClick = async (
+    data: { value: number; color: string },
+    stateName: string
+  ) => {
+    setHighlightedState(stateName);
+    setCity(stateName);
+
+    // If we don't have weather data for this state, try to fetch it
+    if (!stateWeatherData[stateName]) {
+      setMapLoading(true);
+      // Use state capital for more accurate geocoding
+      const capitalCity =
+        STATE_CAPITALS[stateName as keyof typeof STATE_CAPITALS] || stateName;
+      const searchQuery = `${capitalCity}, ${stateName}, India`;
+
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+            searchQuery
+          )}&limit=1&appid=${OPENWEATHER_API_KEY}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.length > 0) {
+            const location = data[0];
+            await fetchStateWeather(stateName, location.lat, location.lon);
+            await fetchWeatherByCoordinates(
+              location.lat,
+              location.lon,
+              stateName
+            );
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to fetch data for ${stateName}:`, err);
+      } finally {
+        setMapLoading(false);
+      }
+    } else {
+      // If we have weather data, just update the main weather display
+      const stateData = stateWeatherData[stateName];
+
+      setSelectedStateName(stateName);
+      setWeatherData({
+        name: stateName, // Show state name instead of capital city name
+        country: "IN",
+        temp: stateData.temp,
+        feels_like: stateData.temp, // We don't have feels_like in state data, so use temp
+        humidity: stateData.humidity,
+        visibility: 10, // Default value as we don't store this
+        wind_speed: stateData.windSpeed,
+        description: stateData.description,
+        icon: "01d", // Default icon
+      });
+    }
   };
 
   const fetchWeatherByCoordinates = async (
@@ -198,7 +568,7 @@ const WeatherPage = () => {
       const data = await response.json();
 
       setWeatherData({
-        name: data.name,
+        name: displayName, // Use the provided display name instead of API response name
         country: data.sys.country,
         temp: Math.round(data.main.temp),
         feels_like: Math.round(data.main.feels_like),
@@ -248,6 +618,24 @@ const WeatherPage = () => {
         icon: data.weather[0].icon,
       });
 
+      // If it's an Indian location, try to highlight the corresponding state
+      if (data.sys.country === "IN") {
+        const matchingState = findMatchingIndianState(data.name, "IN");
+        if (matchingState) {
+          setHighlightedState(matchingState);
+          // Update state weather data
+          setStateWeatherData((prev) => ({
+            ...prev,
+            [matchingState]: {
+              temp: Math.round(data.main.temp),
+              description: data.weather[0].description,
+              humidity: data.main.humidity,
+              windSpeed: data.wind.speed,
+            },
+          }));
+        }
+      }
+
       // Hide suggestions after successful search
       setShowSuggestions(false);
       setSuggestions([]);
@@ -268,6 +656,61 @@ const WeatherPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Loading Screen */}
+      {initialLoading && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-md z-[100] flex items-center justify-center">
+          <Card className="w-full max-w-md mx-4 p-8 bg-card border-border shadow-2xl">
+            <div className="text-center space-y-6">
+              {/* Loading Icon */}
+              <div className="relative flex items-center justify-center">
+                <div className="w-16 h-16 relative">
+                  {/* Outer spinning ring */}
+                  <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+                  <div className="absolute inset-0 border-4 border-transparent border-t-primary rounded-full animate-spin"></div>
+
+                  {/* Inner pulsing circle */}
+                  <div className="absolute inset-2 bg-primary/10 rounded-full animate-pulse"></div>
+
+                  {/* Center icon */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Cloud className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Loading Text */}
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-foreground">
+                  Loading Weather Data
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {loadingMessage}
+                </p>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-300 ease-out rounded-full"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {loadingProgress}% Complete
+                </p>
+              </div>
+
+              {/* Loading Details */}
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>Fetching weather data for all Indian states...</p>
+                <p>This may take a moment for the first load</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
@@ -296,20 +739,6 @@ const WeatherPage = () => {
 
             <div className="flex items-center space-x-4">
               <PageNavigation />
-
-              <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  {new Date().toLocaleString("en-IN", {
-                    timeZone: "Asia/Kolkata",
-                    hour12: true,
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}{" "}
-                  IST
-                </span>
-              </div>
 
               <ThemeToggle />
             </div>
@@ -397,6 +826,197 @@ const WeatherPage = () => {
             </div>
           )}
         </Card>
+
+        {/* India Weather Map */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+          {/* Map Section */}
+          <div className="xl:col-span-2">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2 text-lg">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  India Weather Map
+                  {mapLoading && (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                </CardTitle>
+                {highlightedState && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    Highlighted:{" "}
+                    <span className="font-medium text-primary">
+                      {highlightedState}
+                    </span>
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent className="flex justify-center items-center p-6 h-[800px]">
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      aspectRatio: "4/3",
+                    }}
+                  >
+                    <ReactDatamaps
+                      regionData={createMapData()}
+                      mapLayout={{
+                        hoverTitle: "State",
+                        noDataColor: "#E5E7EB",
+                        borderColor: "#ffffff",
+                        hoverBorderColor: hoveredState
+                          ? getTemperatureColor(
+                              stateWeatherData[hoveredState]?.temp || null,
+                              true
+                            )
+                          : "#4F46E5",
+                        hoverColor: hoveredState
+                          ? getTemperatureColor(
+                              stateWeatherData[hoveredState]?.temp || null,
+                              true
+                            )
+                          : "#4F46E5",
+                      }}
+                      hoverComponent={({
+                        value,
+                      }: {
+                        value: { name: string };
+                      }) => {
+                        const weatherData = stateWeatherData[value.name];
+
+                        // Update hovered state for dynamic color
+                        if (hoveredState !== value.name) {
+                          setHoveredState(value.name);
+                        }
+
+                        return (
+                          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border max-w-xs">
+                            <p className="font-semibold text-gray-800 dark:text-gray-200">
+                              {value.name}
+                            </p>
+                            {weatherData ? (
+                              <div className="mt-2 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Thermometer className="h-4 w-4 text-orange-500" />
+                                  <span className="text-sm font-medium">
+                                    {weatherData.temp}°C
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Droplets className="h-4 w-4 text-blue-500" />
+                                  <span className="text-xs">
+                                    {weatherData.humidity}% humidity
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+                                  {weatherData.description}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Click to load weather data
+                              </p>
+                            )}
+                          </div>
+                        );
+                      }}
+                      onClick={handleStateClick}
+                      onMouseEnter={(stateName: string) =>
+                        setHoveredState(stateName)
+                      }
+                      onMouseLeave={() => setHoveredState(null)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Temperature Legend */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center text-lg">
+                  Temperature Scale
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  {
+                    temp: "≤ 10°C",
+                    color: getTemperatureColor(5),
+                    label: "Very Cold",
+                  },
+                  {
+                    temp: "11-20°C",
+                    color: getTemperatureColor(15),
+                    label: "Cold",
+                  },
+                  {
+                    temp: "21-30°C",
+                    color: getTemperatureColor(25),
+                    label: "Pleasant",
+                  },
+                  {
+                    temp: "31-35°C",
+                    color: getTemperatureColor(33),
+                    label: "Hot",
+                  },
+                  {
+                    temp: "> 35°C",
+                    color: getTemperatureColor(40),
+                    label: "Very Hot",
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-300"
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{item.temp}</span>
+                      <div className="text-xs text-muted-foreground">
+                        {item.label}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {highlightedState && (
+                  <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="text-sm font-semibold text-primary">
+                      Selected: {highlightedState}
+                    </p>
+                    {stateWeatherData[highlightedState] && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <p>{stateWeatherData[highlightedState].temp}°C</p>
+                        <p className="capitalize">
+                          {stateWeatherData[highlightedState].description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center text-sm">
+                  Instructions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground space-y-2">
+                  <p>• Search for a city to highlight its state</p>
+                  <p>• Click on any state to view weather</p>
+                  <p>• Hover over states for quick info</p>
+                  <p>• Colors represent temperature ranges</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Weather Display */}
         {weatherData && (
