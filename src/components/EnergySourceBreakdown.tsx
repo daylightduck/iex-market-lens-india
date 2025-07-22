@@ -27,7 +27,7 @@ const EnergySourceCard = ({ title, current, capacity, percentage, trend, icon, c
         </div>
         <div className={`text-sm font-medium ${trendColor} flex items-center space-x-1`}>
           <span>{trendIndicator}</span>
-          <span>{percentage}%</span>
+          <span>{percentage.toFixed(4)}%</span>
         </div>
       </div>
 
