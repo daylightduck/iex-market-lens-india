@@ -1,12 +1,14 @@
 
 import { useState } from "react";
-import { Zap, Clock } from "lucide-react";
+import { Zap, Clock, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 import DashboardFilters from "@/components/DashboardFilters";
 import TimeSeriesCharts from "@/components/TimeSeriesCharts";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
+import DashboardNavigation from "@/components/DashboardNavigation";
 
 type TimeRange = "1D" | "1W" | "1M" | "1Y" | "custom";
 
@@ -64,6 +66,12 @@ const Index = () => {
                 </span>
               </div>
               
+              <Button variant="outline" asChild className="flex items-center gap-2">
+                <Link to="/iex-dashboard">
+                  <BarChart3 className="h-4 w-4" />
+                  IEX Dashboard
+                </Link>
+              </Button>
 
               <ThemeToggle />
             </div>
@@ -73,6 +81,9 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
+        {/* Dashboard Navigation */}
+        <DashboardNavigation />
+        
         {/* Global Controls & Filters */}
         <DashboardFilters onFiltersChange={handleFiltersChange} />
         

@@ -12,6 +12,7 @@ import GDAMForecastPage from "./pages/GDAMForecastPage";
 import WeatherPage from "./pages/WeatherPage";
 import NotFound from "./pages/NotFound";
 import Map from "./pages/Map";
+import IEXDashboard from "./pages/IEXDashboard";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,8 @@ const App = () => (
             <Route path="/dam-forecast" element={<DAMForecastPage />} />
             <Route path="/gdam-forecast" element={<GDAMForecastPage />} />
             <Route path="/weather" element={<WeatherPage />} />
-            <Route path="/temp" element={<Map />} />
+            <Route path="/map" element={<Map />} />
+            <Route path="/iex-dashboard" element={<IEXDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
