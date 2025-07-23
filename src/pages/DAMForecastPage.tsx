@@ -678,11 +678,161 @@ const DAMForecastPage = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Weekly DAM Price Forecasting Analysis */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Weekly DAM Price Forecasting Analysis (14th July - 21st July)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96 w-full relative">
+                  <div className="grid grid-cols-25 gap-1 h-full">
+                    {/* Hours header */}
+                    <div className="text-xs font-medium text-muted-foreground flex items-center justify-center">
+                      Day
+                    </div>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <div key={i} className="text-xs font-medium text-muted-foreground flex items-center justify-center">
+                        {i}
+                      </div>
+                    ))}
+                    
+                    {/* Heatmap data */}
+                    {weeklyHeatmapData.map((day) => (
+                      <>
+                        <div key={`${day.day}-label`} className="text-xs font-medium text-muted-foreground flex items-center justify-center">
+                          {day.day}
+                        </div>
+                        {day.hours.map((hour, hourIndex) => (
+                          <div
+                            key={`${day.day}-${hourIndex}`}
+                            className="aspect-square flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer"
+                            style={{
+                              backgroundColor: getHeatmapColor(hour.price),
+                              color: hour.price > 5000 ? '#ffffff' : '#000000'
+                            }}
+                            title={`Day ${day.day}, Hour ${hourIndex}: ₹${hour.price.toLocaleString('en-IN')}/MWh`}
+                          >
+                            {hour.price >= 7000 ? Math.round(hour.price / 1000) + 'k' : ''}
+                          </div>
+                        ))}
+                      </>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Color scale legend */}
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Price Scale (₹/MWh):</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">1,500</span>
+                    <div className="flex h-4 w-32 rounded">
+                      <div className="w-1/6" style={{ backgroundColor: '#9acd32' }}></div>
+                      <div className="w-1/6" style={{ backgroundColor: '#00bfaa' }}></div>
+                      <div className="w-1/6" style={{ backgroundColor: '#4682b4' }}></div>
+                      <div className="w-1/6" style={{ backgroundColor: '#483d8b' }}></div>
+                      <div className="w-1/6" style={{ backgroundColor: '#663399' }}></div>
+                      <div className="w-1/6" style={{ backgroundColor: '#ffd700' }}></div>
+                    </div>
+                    <span className="text-xs">9,000+</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
     </div>
   );
+};
+
+// Weekly heatmap data (14th July to 21st July)
+const weeklyHeatmapData = [
+  {
+    day: "14",
+    hours: [
+      { price: 6500 }, { price: 5800 }, { price: 5200 }, { price: 4800 }, { price: 4500 }, { price: 4200 },
+      { price: 3800 }, { price: 3500 }, { price: 2800 }, { price: 2400 }, { price: 2200 }, { price: 2000 },
+      { price: 1800 }, { price: 1600 }, { price: 1500 }, { price: 1700 }, { price: 2100 }, { price: 2800 },
+      { price: 3500 }, { price: 4200 }, { price: 6800 }, { price: 7500 }, { price: 7200 }, { price: 6800 }
+    ]
+  },
+  {
+    day: "15",
+    hours: [
+      { price: 5800 }, { price: 5200 }, { price: 4800 }, { price: 4500 }, { price: 4200 }, { price: 3800 },
+      { price: 3500 }, { price: 2800 }, { price: 2400 }, { price: 2200 }, { price: 2000 }, { price: 1800 },
+      { price: 1600 }, { price: 1500 }, { price: 1700 }, { price: 2100 }, { price: 2800 }, { price: 3500 },
+      { price: 4200 }, { price: 6800 }, { price: 7500 }, { price: 7200 }, { price: 6800 }, { price: 6200 }
+    ]
+  },
+  {
+    day: "16",
+    hours: [
+      { price: 5200 }, { price: 4800 }, { price: 4500 }, { price: 4200 }, { price: 3800 }, { price: 3500 },
+      { price: 2800 }, { price: 2400 }, { price: 2200 }, { price: 2000 }, { price: 1800 }, { price: 1600 },
+      { price: 1500 }, { price: 1700 }, { price: 2100 }, { price: 2800 }, { price: 3500 }, { price: 4200 },
+      { price: 6800 }, { price: 7500 }, { price: 7200 }, { price: 6800 }, { price: 6200 }, { price: 5800 }
+    ]
+  },
+  {
+    day: "17",
+    hours: [
+      { price: 4800 }, { price: 4500 }, { price: 4200 }, { price: 3800 }, { price: 3500 }, { price: 2800 },
+      { price: 2400 }, { price: 2200 }, { price: 2000 }, { price: 1800 }, { price: 1600 }, { price: 1500 },
+      { price: 1700 }, { price: 2100 }, { price: 2800 }, { price: 3500 }, { price: 4200 }, { price: 6800 },
+      { price: 7500 }, { price: 7200 }, { price: 6800 }, { price: 6200 }, { price: 5800 }, { price: 5200 }
+    ]
+  },
+  {
+    day: "18",
+    hours: [
+      { price: 7200 }, { price: 6800 }, { price: 6200 }, { price: 5800 }, { price: 5200 }, { price: 4800 },
+      { price: 4200 }, { price: 3800 }, { price: 3200 }, { price: 2800 }, { price: 2400 }, { price: 2200 },
+      { price: 2000 }, { price: 1800 }, { price: 2000 }, { price: 2400 }, { price: 3200 }, { price: 4200 },
+      { price: 5800 }, { price: 7800 }, { price: 8500 }, { price: 8200 }, { price: 7800 }, { price: 7200 }
+    ]
+  },
+  {
+    day: "19",
+    hours: [
+      { price: 6800 }, { price: 6200 }, { price: 5800 }, { price: 5200 }, { price: 4800 }, { price: 4200 },
+      { price: 3800 }, { price: 3200 }, { price: 2800 }, { price: 2400 }, { price: 2200 }, { price: 2000 },
+      { price: 1800 }, { price: 2000 }, { price: 2400 }, { price: 3200 }, { price: 4200 }, { price: 5800 },
+      { price: 7800 }, { price: 8500 }, { price: 8200 }, { price: 7800 }, { price: 7200 }, { price: 6800 }
+    ]
+  },
+  {
+    day: "20",
+    hours: [
+      { price: 8500 }, { price: 8200 }, { price: 7800 }, { price: 7200 }, { price: 6800 }, { price: 6200 },
+      { price: 5500 }, { price: 4800 }, { price: 4200 }, { price: 3800 }, { price: 3200 }, { price: 2800 },
+      { price: 2400 }, { price: 2200 }, { price: 2500 }, { price: 3200 }, { price: 4500 }, { price: 6200 },
+      { price: 8200 }, { price: 9200 }, { price: 9500 }, { price: 9200 }, { price: 8800 }, { price: 8500 }
+    ]
+  },
+  {
+    day: "21",
+    hours: [
+      { price: 8200 }, { price: 7800 }, { price: 7200 }, { price: 6800 }, { price: 6200 }, { price: 5500 },
+      { price: 4800 }, { price: 4200 }, { price: 3800 }, { price: 3200 }, { price: 2800 }, { price: 2400 },
+      { price: 2200 }, { price: 2500 }, { price: 3200 }, { price: 4500 }, { price: 6200 }, { price: 8200 },
+      { price: 9200 }, { price: 9500 }, { price: 9200 }, { price: 8800 }, { price: 8500 }, { price: 8200 }
+    ]
+  }
+];
+
+// Function to get heatmap color based on price
+const getHeatmapColor = (price: number): string => {
+  if (price >= 9000) return '#ffd700'; // Yellow
+  if (price >= 7000) return '#663399'; // Purple
+  if (price >= 5000) return '#483d8b'; // Dark slate blue
+  if (price >= 3500) return '#4682b4'; // Steel blue
+  if (price >= 2500) return '#00bfaa'; // Teal
+  return '#9acd32'; // Yellow green
 };
 
 export default DAMForecastPage;
