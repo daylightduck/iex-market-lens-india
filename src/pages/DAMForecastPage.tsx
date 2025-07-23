@@ -688,40 +688,40 @@ const DAMForecastPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-96 w-full relative">
-                  <div className="grid grid-cols-25 gap-1 h-full">
-                    {/* Hours header */}
-                    <div className="text-xs font-medium text-muted-foreground flex items-center justify-center">
+                <div className="w-full overflow-x-auto">
+                  {/* Hours header */}
+                  <div className="flex mb-2">
+                    <div className="w-12 text-xs font-medium text-muted-foreground flex items-center justify-center">
                       Day
                     </div>
                     {Array.from({ length: 24 }, (_, i) => (
-                      <div key={i} className="text-xs font-medium text-muted-foreground flex items-center justify-center">
+                      <div key={i} className="w-8 h-8 text-xs font-medium text-muted-foreground flex items-center justify-center">
                         {i}
                       </div>
                     ))}
-                    
-                    {/* Heatmap data */}
-                    {weeklyHeatmapData.map((day) => (
-                      <>
-                        <div key={`${day.day}-label`} className="text-xs font-medium text-muted-foreground flex items-center justify-center">
-                          {day.day}
-                        </div>
-                        {day.hours.map((hour, hourIndex) => (
-                          <div
-                            key={`${day.day}-${hourIndex}`}
-                            className="aspect-square flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer"
-                            style={{
-                              backgroundColor: getHeatmapColor(hour.price),
-                              color: hour.price > 5000 ? '#ffffff' : '#000000'
-                            }}
-                            title={`Day ${day.day}, Hour ${hourIndex}: ₹${hour.price.toLocaleString('en-IN')}/MWh`}
-                          >
-                            {hour.price >= 7000 ? Math.round(hour.price / 1000) + 'k' : ''}
-                          </div>
-                        ))}
-                      </>
-                    ))}
                   </div>
+                  
+                  {/* Heatmap data */}
+                  {weeklyHeatmapData.map((day) => (
+                    <div key={day.day} className="flex mb-1">
+                      <div className="w-12 h-8 text-xs font-medium text-muted-foreground flex items-center justify-center">
+                        {day.day}
+                      </div>
+                      {day.hours.map((hour, hourIndex) => (
+                        <div
+                          key={`${day.day}-${hourIndex}`}
+                          className="w-8 h-8 flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
+                          style={{
+                            backgroundColor: getHeatmapColor(hour.price),
+                            color: hour.price > 5000 ? '#ffffff' : '#000000'
+                          }}
+                          title={`Day ${day.day}, Hour ${hourIndex}: ₹${hour.price.toLocaleString('en-IN')}/MWh`}
+                        >
+                          {hour.price >= 7000 ? Math.round(hour.price / 1000) + 'k' : ''}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
                 
                 {/* Color scale legend */}
