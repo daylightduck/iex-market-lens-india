@@ -710,14 +710,14 @@ const DAMForecastPage = () => {
                       {day.hours.map((hour, hourIndex) => (
                         <div
                           key={`${day.day}-${hourIndex}`}
-                          className="w-8 h-8 flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
+                          className="w-10 h-8 flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
                           style={{
                             backgroundColor: getHeatmapColor(hour.price),
                             color: hour.price > 5000 ? '#ffffff' : '#000000'
                           }}
                           title={`Day ${day.day}, Hour ${hourIndex}: ₹${hour.price.toLocaleString('en-IN')}/MWh`}
                         >
-                          {hour.price >= 7000 ? Math.round(hour.price / 1000) + 'k' : ''}
+                          {Math.round(hour.price / 1000)}k
                         </div>
                       ))}
                     </div>
