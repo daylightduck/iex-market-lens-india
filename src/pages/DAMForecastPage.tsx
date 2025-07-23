@@ -688,57 +688,12 @@ const DAMForecastPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="w-full overflow-x-auto">
-                  {/* Hours header */}
-                  <div className="flex mb-2">
-                    <div className="w-12 text-xs font-medium text-muted-foreground flex items-center justify-center">
-                      Day
-                    </div>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <div key={i} className="w-8 h-8 text-xs font-medium text-muted-foreground flex items-center justify-center">
-                        {i}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Heatmap data */}
-                  {weeklyHeatmapData.map((day) => (
-                    <div key={day.day} className="flex mb-1">
-                      <div className="w-12 h-8 text-xs font-medium text-muted-foreground flex items-center justify-center">
-                        {day.day}
-                      </div>
-                      {day.hours.map((hour, hourIndex) => (
-                        <div
-                          key={`${day.day}-${hourIndex}`}
-                          className="w-10 h-8 flex items-center justify-center text-xs font-medium rounded-sm transition-colors cursor-pointer border border-gray-200 dark:border-gray-700"
-                          style={{
-                            backgroundColor: getHeatmapColor(hour.price),
-                            color: hour.price > 5000 ? '#ffffff' : '#000000'
-                          }}
-                          title={`Day ${day.day}, Hour ${hourIndex}: ₹${hour.price.toLocaleString('en-IN')}/MWh`}
-                        >
-                          {Math.round(hour.price / 1000)}k
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Color scale legend */}
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Price Scale (₹/MWh):</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs">1,500</span>
-                    <div className="flex h-4 w-32 rounded">
-                      <div className="w-1/6" style={{ backgroundColor: '#9acd32' }}></div>
-                      <div className="w-1/6" style={{ backgroundColor: '#00bfaa' }}></div>
-                      <div className="w-1/6" style={{ backgroundColor: '#4682b4' }}></div>
-                      <div className="w-1/6" style={{ backgroundColor: '#483d8b' }}></div>
-                      <div className="w-1/6" style={{ backgroundColor: '#663399' }}></div>
-                      <div className="w-1/6" style={{ backgroundColor: '#ffd700' }}></div>
-                    </div>
-                    <span className="text-xs">9,000+</span>
-                  </div>
+                <div className="w-full">
+                  <img 
+                    src="/lovable-uploads/074a09b1-6454-4a7a-a63f-2260fff35d6f.png" 
+                    alt="Predicted MCP Heatmap (14th July to 21st July)" 
+                    className="w-full h-auto rounded-lg"
+                  />
                 </div>
               </CardContent>
             </Card>
