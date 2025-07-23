@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
-import DashboardNavigation from "@/components/DashboardNavigation";
 
 // OpenWeatherMap API configuration
 const OPENWEATHER_API_KEY = "0e2bee11b747994db8a18e35ebd3f599";
@@ -915,8 +914,7 @@ const WeatherPage = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-        <DashboardNavigation />
-        <PageNavigation />
+              <PageNavigation />
 
               {/* Cache Status Indicator */}
               {isDataFromCache && (

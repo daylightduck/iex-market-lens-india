@@ -9,7 +9,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
-import DashboardNavigation from "@/components/DashboardNavigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 // Real DAM forecast data from July 14-21, 2025
@@ -172,7 +171,6 @@ const DAMForecastPage = () => {
           </div>
         </div>
 
-        <DashboardNavigation />
         <PageNavigation />
 
         {/* Key Statistics */}

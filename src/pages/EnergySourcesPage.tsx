@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import EnergySourceBreakdown from "@/components/EnergySourceBreakdown";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
-import DashboardNavigation from "@/components/DashboardNavigation";
 
 const EnergySourcesPage = () => {
   return (
@@ -35,8 +34,7 @@ const EnergySourcesPage = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-        <DashboardNavigation />
-        <PageNavigation />
+              <PageNavigation />
               
               <div className="flex items-center space-x-2 px-3 py-2 bg-muted rounded-lg">
                 <Clock className="h-4 w-4 text-muted-foreground" />
