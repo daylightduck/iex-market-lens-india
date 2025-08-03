@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import PageNavigation from "@/components/PageNavigation";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart, ComposedChart } from "recharts";
 
 // Real DAM forecast data from July 14-21, 2025
 const damForecastData: { [key: string]: Array<{ hour: number; avgPrice: number }> } = {
@@ -83,16 +83,23 @@ const formatCurrency = (value: number) => {
   return `₹${value.toLocaleString('en-IN')}`;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    return (
-      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-        <p className="font-medium">{`Hour: ${label}:00`}</p>
-        <p className="text-primary">
-          {`MCP: ${formatCurrency(payload[0].value)}/MWh`}
-        </p>
-      </div>
-    );
+    const mcpValue = payload.find((p: { dataKey: string; value: number }) => p.dataKey === 'avgPrice')?.value;
+    if (mcpValue) {
+      return (
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-medium">{`Hour: ${label}:00`}</p>
+          <p className="text-primary">
+            {`MCP: ${formatCurrency(mcpValue)}/MWh`}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {`Range: ${formatCurrency(Math.max(0, mcpValue - 100))} - ${formatCurrency(mcpValue + 100)}/MWh`}
+          </p>
+        </div>
+      );
+    }
   }
   return null;
 };
@@ -106,19 +113,41 @@ const DAMForecastPage = () => {
 
   const getCurrentData = () => {
     const dateKey = formatDateKey(selectedDate);
-    return damForecastData[dateKey] || damForecastData["2025-07-14"];
+    const baseData = damForecastData[dateKey] || damForecastData["2025-07-14"];
+    
+    // Add envelope data (±₹1000/MWh range)
+    return baseData.map(item => ({
+      ...item,
+      upperBound: item.avgPrice + 1000,
+      lowerBound: Math.max(0, item.avgPrice - 1000) // Ensure lower bound doesn't go negative
+    }));
   };
 
-  const calculateStats = (data: Array<{ hour: number; avgPrice: number }>) => {
+  const calculateStats = (data: Array<{ hour: number; avgPrice: number; upperBound?: number; lowerBound?: number }>) => {
     const prices = data.map(d => d.avgPrice);
+    const upperBounds = data.map(d => d.upperBound || d.avgPrice + 100);
+    const lowerBounds = data.map(d => d.lowerBound || Math.max(0, d.avgPrice - 100));
+    
     const maxPrice = Math.max(...prices);
     const minPrice = Math.min(...prices);
     const avgPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
     
+    // Calculate Y-axis domain to better show the envelope
+    const maxBound = Math.max(...upperBounds);
+    const minBound = Math.min(...lowerBounds);
+    const yAxisPadding = (maxBound - minBound) * 0.1; // 10% padding
+    
     const maxHour = data.find(d => d.avgPrice === maxPrice)?.hour || 0;
     const minHour = data.find(d => d.avgPrice === minPrice)?.hour || 0;
     
-    return { maxPrice, minPrice, avgPrice, maxHour, minHour };
+    return { 
+      maxPrice, 
+      minPrice, 
+      avgPrice, 
+      maxHour, 
+      minHour,
+      yAxisDomain: [Math.max(0, minBound - yAxisPadding), maxBound + yAxisPadding]
+    };
   };
 
   const currentData = getCurrentData();
@@ -243,11 +272,20 @@ const DAMForecastPage = () => {
               <BarChart3 className="h-5 w-5" />
               Hourly MCP Forecast - {format(selectedDate, 'dd MMMM yyyy')}
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Solid line shows predicted prices. Shaded area shows ±₹100/MWh forecast uncertainty range.
+            </p>
           </CardHeader>
           <CardContent>
             <div className="h-96 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={currentData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <ComposedChart data={currentData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="envelopeGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis 
                     dataKey="hour" 
@@ -255,20 +293,61 @@ const DAMForecastPage = () => {
                     tickFormatter={(value) => `${value}:00`}
                   />
                   <YAxis 
+                    domain={stats.yAxisDomain}
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value) => `₹${(value/1000).toFixed(1)}k`}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <ReferenceLine y={stats.avgPrice} stroke="#8884d8" strokeDasharray="5 5" label="Avg" />
+                  
+                  {/* Envelope area showing ±₹100/MWh range */}
+                  <Area 
+                    type="monotone" 
+                    dataKey="upperBound" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={0.5}
+                    strokeOpacity={0.4}
+                    fill="url(#envelopeGradient)" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="lowerBound" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={0.5}
+                    strokeOpacity={0.4}
+                    fill="hsl(var(--background))" 
+                  />
+                  
+                  {/* Main forecast line */}
                   <Line 
                     type="monotone" 
                     dataKey="avgPrice" 
                     stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    strokeWidth={1.5}
+                    dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                    activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
                   />
-                </LineChart>
+                  
+                  {/* Envelope boundary lines */}
+                  <Line 
+                    type="monotone" 
+                    dataKey="upperBound" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={0.8}
+                    strokeOpacity={0.5}
+                    strokeDasharray="2 2"
+                    dot={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="lowerBound" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={0.8}
+                    strokeOpacity={0.5}
+                    strokeDasharray="2 2"
+                    dot={false}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
